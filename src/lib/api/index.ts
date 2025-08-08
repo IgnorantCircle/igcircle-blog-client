@@ -1,3 +1,4 @@
-// 导入所有API模块
+// 导出基础API客户端类
 export { BaseApiClient } from './base'
-export { authApi } from './auth'
+// 导出所有API模块
+export { articlesApi } from './articles'
