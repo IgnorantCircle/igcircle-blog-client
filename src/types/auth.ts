@@ -1,59 +1,90 @@
 // 认证相关类型定义
 
-import { User } from "./users";
+import { UserType } from './users'
 
 /**
  * 登录请求
  */
-export interface LoginRequest {
-  username: string;
-  password: string;
+export interface LoginRequestType {
+	username: string
+	password: string
 }
 
 /**
  * 登录响应
  */
-export interface LoginResponse {
-  message: string;
-  user:User;
-  access_token: string;
+export interface LoginResponseType {
+	message: string
+	user: UserType
+	access_token: string
 }
 
 /**
  * 注册请求
  */
-export interface RegisterRequest {
-  username: string;
-  email: string;
-  password: string;
-  nickname?: string;
-  verificationCode?: string;
+export interface RegisterRequestType {
+	username: string
+	email: string
+	password: string
+	nickname?: string
+	verificationCode?: string
 }
 
 /**
  * 注册响应
  */
-export interface RegisterResponse {
-  message: string;
-  user:User;
-  token: string;
+export interface RegisterResponseType {
+	message: string
+	user: UserType
+	token: string
 }
 
 /**
  * 登录凭据
  */
-export interface LoginCredentials {
-  email: string;
-  password: string;
+export interface LoginCredentialsType {
+	email: string
+	password: string
 }
 
 /**
  * 注册数据
  */
-export interface RegisterData {
-  username: string;
-  email: string;
-  password: string;
-  nickname?: string;
-  verificationCode?: string;
+export interface RegisterDataType {
+	username: string
+	email: string
+	password: string
+	nickname?: string
+	verificationCode?: string
+}
+
+/**
+ * 忘记密码请求
+ */
+export interface ForgotPasswordRequestType {
+	email: string
+}
+
+/**
+ * 忘记密码响应
+ */
+export interface ForgotPasswordResponseType {
+	success: boolean
+	message: string
+}
+
+/**
+ * 重置密码请求
+ */
+export interface ResetPasswordRequestType {
+	token: string
+	newPassword: string
+}
+
+/**
+ * 重置密码响应
+ */
+export interface ResetPasswordResponseType {
+	success: boolean
+	message: string
 }

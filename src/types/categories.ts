@@ -3,10 +3,11 @@
 /**
  * 公开分类信息
  */
-export interface PublicCategory {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  articleCount: number;
+export interface PublicCategoryType {
+	id: string
+	name: string
+	slug: string
+	description: string
+	icon: string
+	articleCount: number
 }
