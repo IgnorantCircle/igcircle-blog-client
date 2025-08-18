@@ -1,205 +1,223 @@
-import { ApiError } from '@/types';
+import { useToast } from '@/hooks/useToast'
+import { ApiErrorType } from '@/types'
+
+// 全局toast实例
+let globalToast: ReturnType<typeof useToast> | null = null
+
+// 设置全局toast实例
+export const setGlobalToast = (toast: ReturnType<typeof useToast>) => {
+	globalToast = toast
+}
+
+// 获取全局toast实例
+export const getGlobalToast = () => globalToast
 
 /**
- * 全局错误处理工具类
+ * 全局错误处理器类型
  */
-export class ErrorHandler {
-  /**
-   * 处理API错误
-   * @param error 错误对象
-   * @returns 格式化的错误信息
-   */
-  static handleApiError(error: unknown): string {
-    if (error instanceof ApiError) {
-      return this.formatApiError(error);
-    }
+type GlobalErrorHandler = (error: unknown, context?: string) => void
 
-    if (error instanceof Error) {
-      return error.message;
-    }
+// 全局错误处理器
+let globalErrorHandler: GlobalErrorHandler | null = null
 
-    return '未知错误，请稍后重试';
-  }
-
-  /**
-   * 格式化API错误信息
-   * @param error API错误对象
-   * @returns 格式化的错误信息
-   */
-  private static formatApiError(error: ApiError): string {
-    // 根据错误类型返回不同的提示信息
-    if (error.isNotFound()) {
-      return '请求的资源不存在';
-    }
-
-    if (error.isUnauthorized()) {
-      return '请先登录后再进行操作';
-    }
-
-    if (error.isForbidden()) {
-      return '您没有权限进行此操作';
-    }
-
-    if (error.isConflict()) {
-      return '操作冲突，请刷新页面后重试';
-    }
-
-    if (error.isValidationError()) {
-      // 处理验证错误，显示详细的验证信息
-      if (error.details && error.details.length > 0) {
-        return `参数验证失败：${error.details.join('，')}`;
-      }
-      return '参数验证失败，请检查输入信息';
-    }
-
-    if (error.isServerError()) {
-      return '服务器内部错误，请稍后重试';
-    }
-
-    // 返回原始错误信息
-    return error.message || '操作失败，请稍后重试';
-  }
-
-  /**
-   * 记录错误日志
-   * @param error 错误对象
-   * @param context 错误上下文
-   */
-  static logError(error: unknown, context?: string): void {
-    const timestamp = new Date().toISOString();
-    const contextInfo = context ? ` [${context}]` : '';
-
-    if (error instanceof ApiError) {
-      console.error(
-        `${timestamp}${contextInfo} API Error:`,
-        {
-          code: error.code,
-          message: error.message,
-          error: error.error,
-          details: error.details,
-          path: error.path,
-          timestamp: error.timestamp,
-        }
-      );
-    } else if (error instanceof Error) {
-      console.error(
-        `${timestamp}${contextInfo} Error:`,
-        {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-        }
-      );
-    } else {
-      console.error(
-        `${timestamp}${contextInfo} Unknown Error:`,
-        error
-      );
-    }
-  }
-
-  /**
-   * 显示错误通知（可以集成到UI组件中）
-   * @param error 错误对象
-   * @param context 错误上下文
-   */
-  static showError(error: unknown, context?: string): void {
-    const message = this.handleApiError(error);
-    this.logError(error, context);
-
-    // 这里可以集成到具体的通知组件中
-    // 例如：toast.error(message)
-    console.warn('Error notification:', message);
-  }
-
-  /**
-   * 判断错误是否需要重试
-   * @param error 错误对象
-   * @returns 是否可以重试
-   */
-  static canRetry(error: unknown): boolean {
-    if (error instanceof ApiError) {
-      // 服务器错误和网络错误可以重试
-      return error.isServerError() || error.code === 0;
-    }
-
-    // 网络错误可以重试
-    if (error instanceof Error) {
-      return error.message.includes('fetch') || 
-             error.message.includes('network') ||
-             error.message.includes('timeout');
-    }
-
-    return false;
-  }
-
-  /**
-   * 获取错误的严重程度
-   * @param error 错误对象
-   * @returns 错误严重程度
-   */
-  static getErrorSeverity(error: unknown): 'low' | 'medium' | 'high' | 'critical' {
-    if (error instanceof ApiError) {
-      if (error.isServerError()) {
-        return 'critical';
-      }
-      if (error.isUnauthorized() || error.isForbidden()) {
-        return 'high';
-      }
-      if (error.isNotFound() || error.isConflict()) {
-        return 'medium';
-      }
-      if (error.isBadRequest() || error.isValidationError()) {
-        return 'low';
-      }
-    }
-
-    return 'medium';
-  }
+/**
+ * 设置全局错误处理器
+ */
+export const setGlobalErrorHandler = (handler: GlobalErrorHandler) => {
+	globalErrorHandler = handler
 }
 
 /**
- * 错误重试工具
+ * 统一错误捕获函数 - 替代try-catch
+ * @param fn 要执行的函数
+ * @param context 错误上下文
+ * @returns Promise结果或错误
  */
-export class RetryHandler {
-  /**
-   * 带重试的异步函数执行
-   * @param fn 要执行的异步函数
-   * @param maxRetries 最大重试次数
-   * @param delay 重试延迟（毫秒）
-   * @returns Promise结果
-   */
-  static async withRetry<T>(
-    fn: () => Promise<T>,
-    maxRetries: number = 3,
-    delay: number = 1000
-  ): Promise<T> {
-    let lastError: unknown;
-
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        return await fn();
-      } catch (error) {
-        lastError = error;
-
-        // 如果是最后一次尝试或错误不可重试，直接抛出错误
-        if (attempt === maxRetries || !ErrorHandler.canRetry(error)) {
-          throw error;
-        }
-
-        // 等待后重试
-        await this.sleep(delay * Math.pow(2, attempt)); // 指数退避
-      }
-    }
-
-    throw lastError;
-  }
-
-  /**
-   * 延迟函数
-   * @param ms 延迟毫秒数
-   */
-  private static sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+export async function safeExecute<T>(
+	fn: () => Promise<T> | T,
+	context?: string,
+): Promise<T | null> {
+	const result = await Promise.resolve(fn()).catch((error) => {
+		handleGlobalError(error, context)
+		return null
+	})
+	return result
 }
+
+/**
+ * 同步函数的安全执行
+ * @param fn 要执行的同步函数
+ * @param context 错误上下文
+ * @returns 函数结果或null
+ */
+export function safeExecuteSync<T>(fn: () => T, context?: string): T | null {
+	try {
+		return fn()
+	} catch (error) {
+		handleGlobalError(error, context)
+		return null
+	}
+}
+
+/**
+ * 全局错误处理函数
+ * @param error 错误对象
+ * @param context 错误上下文
+ */
+export function handleGlobalError(error: unknown, context?: string): void {
+	// 如果有自定义全局错误处理器，优先使用
+	if (globalErrorHandler) {
+		globalErrorHandler(error, context)
+		return
+	}
+
+	// 默认使用showError处理
+	showError(error, context)
+}
+
+/**
+ * Promise错误包装器 - 自动处理Promise错误
+ * @param promise Promise对象
+ * @param context 错误上下文
+ * @returns 包装后的Promise
+ */
+export function wrapPromise<T>(
+	promise: Promise<T>,
+	context?: string,
+): Promise<T | null> {
+	return promise.catch((error) => {
+		handleGlobalError(error, context)
+		return null
+	})
+}
+
+/**
+ * 初始化全局错误监听器
+ */
+export function initGlobalErrorHandlers(): void {
+	// 监听未捕获的Promise错误
+	if (typeof window !== 'undefined') {
+		window.addEventListener('unhandledrejection', (event) => {
+			console.error('未处理的Promise拒绝:', event.reason)
+			handleGlobalError(event.reason, 'unhandledrejection')
+			event.preventDefault() // 阻止默认的错误处理
+		})
+
+		// 监听全局JavaScript错误
+		window.addEventListener('error', (event) => {
+			console.error('全局JavaScript错误:', event.error)
+			handleGlobalError(event.error || event.message, 'globalError')
+		})
+
+		// 捕获资源加载错误
+		window.addEventListener(
+			'error',
+			(event) => {
+				if (event.target !== window) {
+					console.error('资源加载错误:', {
+						source: event.target,
+						message: event.message || '资源加载失败',
+					})
+				}
+			},
+			true,
+		)
+	}
+}
+
+/**
+ * 格式化错误信息
+ * @param error 错误对象
+ * @returns 格式化的错误信息
+ */
+function formatErrorMessage(error: unknown): string {
+	if (error instanceof ApiErrorType) {
+		// 根据错误类型返回不同的提示信息
+		if (error.isNotFound()) {
+			return '请求的资源不存在'
+		}
+		if (error.isUnauthorized()) {
+			return '请先登录后再进行操作'
+		}
+		if (error.isForbidden()) {
+			return '您没有权限进行此操作'
+		}
+		if (error.isConflict()) {
+			return '操作冲突，请刷新页面后重试'
+		}
+		if (error.isValidationError()) {
+			if (error.details && error.details.length > 0) {
+				return `请求信息有误：${error.details.join('，')}`
+			}
+			return '验证失败，请检查输入信息'
+		}
+		if (error.isServerError()) {
+			return '服务器内部错误，请稍后重试'
+		}
+		return error.message || '操作失败，请稍后重试'
+	}
+	return '未知错误，请稍后重试'
+}
+
+/**
+ * 显示错误提示
+ * @param error 错误对象
+ * @param context 错误上下文（可选）
+ */
+export function showError(error: unknown, context?: string): void {
+	const message = formatErrorMessage(error)
+
+	// 开发环境下记录详细错误信息
+	if (process.env.NODE_ENV === 'development') {
+		const contextInfo = context ? ` [${context}]` : ''
+		console.error(`🚨 错误${contextInfo}:`, error)
+	}
+
+	// 显示toast提示
+	if (globalToast) {
+		globalToast.error(message)
+	} else {
+		// Toast未初始化时，仅在开发环境显示警告
+		if (process.env.NODE_ENV === 'development') {
+			console.warn('Toast未初始化，错误信息:', message)
+		}
+	}
+}
+
+/**
+ * 显示成功提示
+ * @param message 成功信息
+ */
+export function showSuccess(message: string): void {
+	if (globalToast) {
+		globalToast.success(message)
+	} else {
+		console.log('成功:', message)
+	}
+}
+
+/**
+ * 显示警告提示
+ * @param message 警告信息
+ */
+export function showWarning(message: string): void {
+	if (globalToast) {
+		globalToast.warning(message)
+	} else {
+		console.warn('警告:', message)
+	}
+}
+
+/**
+ * 显示信息提示
+ * @param message 信息内容
+ */
+export function showInfo(message: string): void {
+	if (globalToast) {
+		globalToast.info(message)
+	} else {
+		console.info('信息:', message)
+	}
+}
+
+// 所有主要的错误处理函数已在上面定义时导出

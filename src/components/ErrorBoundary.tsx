@@ -1,258 +1,463 @@
-'use client';
+'use client'
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { ApiError } from '@/types';
-import { ErrorHandler } from '@/lib/error-handler';
-import { Button } from '@/components/ui/Button';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import Link from 'next/link';
-
+import React, {
+	Component,
+	ErrorInfo,
+	ReactNode,
+	useCallback,
+	useState,
+} from 'react'
+import {
+	Box,
+	Container,
+	Text,
+	Button,
+	VStack,
+	HStack,
+	Badge,
+} from '@chakra-ui/react'
+import { RefreshCw, Home, AlertTriangle, Bug } from 'lucide-react'
 interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+	children: ReactNode
+	fallback?: ReactNode
+	onError?: (error: Error, errorInfo: ErrorInfo) => void
+	showErrorDetails?: boolean
+	level?: 'page' | 'component' | 'critical'
+	title?: string
+	description?: string
+	enableRetry?: boolean
+	enableReset?: boolean
+	maxRetries?: number
 }
 
 interface State {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
+	hasError: boolean
+	error: Error | null
+	errorInfo: ErrorInfo | null
+	retryCount: number
+	errorId: string
+	timestamp: number
 }
 
-/**
- * 全局错误边界组件
- */
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null,
-    };
-  }
+// 错误边界组件
+class ErrorBoundaryClass extends Component<Props, State> {
+	private maxRetries: number
 
-  static getDerivedStateFromError(error: Error): State {
-    return {
-      hasError: true,
-      error,
-      errorInfo: null,
-    };
-  }
+	constructor(props: Props) {
+		super(props)
+		this.maxRetries = props.maxRetries || 3
+		this.state = {
+			hasError: false,
+			error: null,
+			errorInfo: null,
+			retryCount: 0,
+			errorId: '',
+			timestamp: 0,
+		}
+	}
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    this.setState({
-      error,
-      errorInfo,
-    });
+	static getDerivedStateFromError(error: Error): Partial<State> {
+		// 更新 state 使下一次渲染能够显示降级后的 UI
+		const errorId = `error_${Date.now()}_${Math.random()
+			.toString(36)
+			.substr(2, 9)}`
+		console.error('🚨 ErrorBoundary 捕获到错误:', { error, errorId })
 
-    // 记录错误日志
-    ErrorHandler.logError(error, 'ErrorBoundary');
-    
-    // 调用自定义错误处理函数
-    this.props.onError?.(error, errorInfo);
-  }
+		return {
+			hasError: true,
+			error,
+			errorId,
+			timestamp: Date.now(),
+		}
+	}
 
-  handleRetry = () => {
-    this.setState({
-      hasError: false,
-      error: null,
-      errorInfo: null,
-    });
-  };
+	componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+		// 记录错误信息
+		console.error('🚨 ErrorBoundary 详细错误信息:', {
+			error,
+			errorInfo,
+			componentStack: errorInfo.componentStack,
+			errorId: this.state.errorId,
+			timestamp: new Date().toISOString(),
+		})
 
-  render() {
-    if (this.state.hasError) {
-      // 如果提供了自定义fallback，使用它
-      if (this.props.fallback) {
-        return this.props.fallback;
-      }
+		this.setState({
+			errorInfo,
+		})
 
-      // 默认错误UI
-      return (
-        <ErrorFallback
-          error={this.state.error}
-          errorInfo={this.state.errorInfo}
-          onRetry={this.handleRetry}
-        />
-      );
-    }
+		// 调用外部错误处理函数
+		if (this.props.onError) {
+			this.props.onError(error, errorInfo)
+		}
+	}
 
-    return this.props.children;
-  }
+	// 重试渲染
+	retry = () => {
+		if (this.state.retryCount < this.maxRetries) {
+			console.log(
+				`🔄 ErrorBoundary 重试渲染 (${this.state.retryCount + 1}/${
+					this.maxRetries
+				})`,
+			)
+			this.setState({
+				hasError: false,
+				error: null,
+				errorInfo: null,
+				retryCount: this.state.retryCount + 1,
+				errorId: '',
+				timestamp: 0,
+			})
+		} else {
+			console.warn('⚠️ ErrorBoundary 已达到最大重试次数')
+		}
+	}
+
+	// 重置错误状态
+	reset = () => {
+		console.log('🔄 ErrorBoundary 重置错误状态')
+		this.setState({
+			hasError: false,
+			error: null,
+			errorInfo: null,
+			retryCount: 0,
+			errorId: '',
+			timestamp: 0,
+		})
+	}
+
+	render() {
+		if (this.state.hasError) {
+			// 如果有自定义的 fallback UI，使用它
+			if (this.props.fallback) {
+				return this.props.fallback
+			}
+
+			// 默认的错误 UI
+			return (
+				<DefaultErrorUI
+					error={this.state.error}
+					errorInfo={this.state.errorInfo}
+					retryCount={this.state.retryCount}
+					maxRetries={this.maxRetries}
+					errorId={this.state.errorId}
+					timestamp={this.state.timestamp}
+					level={this.props.level || 'component'}
+					title={this.props.title}
+					description={this.props.description}
+					enableRetry={this.props.enableRetry !== false}
+					enableReset={this.props.enableReset !== false}
+					onRetry={this.retry}
+					onReset={this.reset}
+					showErrorDetails={this.props.showErrorDetails}
+				/>
+			)
+		}
+
+		return this.props.children
+	}
 }
 
-/**
- * 错误回退组件属性
- */
-interface ErrorFallbackProps {
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
-  onRetry: () => void;
+// 默认错误UI组件
+interface DefaultErrorUIProps {
+	error: Error | null
+	errorInfo: ErrorInfo | null
+	retryCount: number
+	maxRetries: number
+	errorId: string
+	timestamp: number
+	level: 'page' | 'component' | 'critical'
+	title?: string
+	description?: string
+	enableRetry: boolean
+	enableReset: boolean
+	onRetry: () => void
+	onReset: () => void
+	showErrorDetails?: boolean
 }
 
-/**
- * 默认错误回退组件
- */
-function ErrorFallback({ error, errorInfo, onRetry }: ErrorFallbackProps) {
-  const isApiError = error instanceof ApiError;
-  const errorMessage = error ? ErrorHandler.handleApiError(error) : '发生了未知错误';
-  const canRetry = error ? ErrorHandler.canRetry(error) : true;
-  const severity = error ? ErrorHandler.getErrorSeverity(error) : 'medium';
+function DefaultErrorUI({
+	error,
+	errorInfo,
+	retryCount,
+	maxRetries,
+	errorId,
+	timestamp,
+	level,
+	title,
+	description,
+	enableRetry,
+	onRetry,
+	showErrorDetails = false,
+}: DefaultErrorUIProps) {
+	const getErrorIcon = () => {
+		switch (level) {
+			case 'critical':
+				return <AlertTriangle size={48} color="#e53e3e" />
+			case 'page':
+				return <Bug size={48} color="#d69e2e" />
+			default:
+				return <AlertTriangle size={48} color="#f56565" />
+		}
+	}
 
-  // 根据错误严重程度选择不同的样式
-  const getSeverityStyles = () => {
-    switch (severity) {
-      case 'critical':
-        return 'border-red-200 bg-red-50';
-      case 'high':
-        return 'border-orange-200 bg-orange-50';
-      case 'medium':
-        return 'border-yellow-200 bg-yellow-50';
-      case 'low':
-        return 'border-blue-200 bg-blue-50';
-      default:
-        return 'border-gray-200 bg-gray-50';
-    }
-  };
+	const getErrorTitle = () => {
+		if (title) return title
+		switch (level) {
+			case 'critical':
+				return '系统发生严重错误'
+			case 'page':
+				return '页面加载失败'
+			default:
+				return '组件渲染出错'
+		}
+	}
 
-  const getIconColor = () => {
-    switch (severity) {
-      case 'critical':
-        return 'text-red-500';
-      case 'high':
-        return 'text-orange-500';
-      case 'medium':
-        return 'text-yellow-500';
-      case 'low':
-        return 'text-blue-500';
-      default:
-        return 'text-gray-500';
-    }
-  };
+	const getErrorDescription = () => {
+		if (description) return description
+		switch (level) {
+			case 'critical':
+				return '应用遇到了严重错误，建议刷新页面或联系技术支持。'
+			case 'page':
+				return '页面无法正常加载，请尝试刷新页面或返回首页。'
+			default:
+				return '页面部分功能出现问题，您可以尝试重新加载或继续使用其他功能。'
+		}
+	}
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className={`max-w-md w-full rounded-lg border-2 p-6 text-center ${getSeverityStyles()}`}>
-        <div className="flex justify-center mb-4">
-          <AlertTriangle className={`h-12 w-12 ${getIconColor()}`} />
-        </div>
-        
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          页面出现错误
-        </h2>
-        
-        <p className="text-gray-600 mb-6">
-          {errorMessage}
-        </p>
+	return (
+		<Container maxW="2xl" py={8}>
+			<VStack gap={6} align="stretch">
+				{/* 错误图标和标题 */}
+				<VStack gap={4} textAlign="center">
+					{getErrorIcon()}
+					<VStack gap={2}>
+						<Text
+							fontSize="xl"
+							fontWeight="bold"
+							color={level === 'critical' ? 'red.600' : 'red.500'}
+						>
+							{getErrorTitle()}
+						</Text>
+						<Text color="gray.600" maxW="md">
+							{getErrorDescription()}
+						</Text>
+					</VStack>
+				</VStack>
 
-        {/* API错误详情 */}
-        {isApiError && (
-          <div className="mb-6 p-3 bg-white rounded border text-left text-sm">
-            <div className="font-medium text-gray-700 mb-1">错误详情：</div>
-            <div className="text-gray-600">
-              <div>状态码: {(error as ApiError).code}</div>
-              {(error as ApiError).error && (
-                <div>错误类型: {(error as ApiError).error}</div>
-              )}
-              {(error as ApiError).path && (
-                <div>请求路径: {(error as ApiError).path}</div>
-              )}
-            </div>
-          </div>
-        )}
+				{/* 错误统计信息 */}
+				<Box p={4} bg="gray.50" borderRadius="md">
+					<HStack justify="space-between" wrap="wrap" gap={4}>
+						<VStack align="start" gap={1}>
+							<Text fontSize="sm" color="gray.600">
+								重试次数: {retryCount}/{maxRetries}
+							</Text>
+							<Text fontSize="sm" color="gray.600">
+								错误时间: {new Date(timestamp).toLocaleString()}
+							</Text>
+						</VStack>
+						<VStack align="end" gap={1}>
+							<Badge
+								colorPalette={
+									level === 'critical'
+										? 'red'
+										: level === 'page'
+											? 'orange'
+											: 'yellow'
+								}
+							>
+								{level === 'critical'
+									? '严重'
+									: level === 'page'
+										? '页面'
+										: '组件'}
+							</Badge>
+							<Text fontSize="xs" color="gray.500" fontFamily="mono">
+								ID: {errorId.slice(-8)}
+							</Text>
+						</VStack>
+					</HStack>
+				</Box>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          {canRetry && (
-            <Button
-              onClick={onRetry}
-              variant="primary"
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              重试
-            </Button>
-          )}
-          
-          <Link href="/">
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 w-full sm:w-auto"
-            >
-              <Home className="h-4 w-4" />
-              返回首页
-            </Button>
-          </Link>
-        </div>
+				{/* 操作按钮 */}
+				<VStack gap={3}>
+					{enableRetry && retryCount < maxRetries && (
+						<Button colorPalette="blue" onClick={onRetry} size="lg" w="full">
+							<RefreshCw size={16} />
+							重试加载 ({maxRetries - retryCount} 次机会)
+						</Button>
+					)}
 
-        {/* 开发环境下显示详细错误信息 */}
-        {process.env.NODE_ENV === 'development' && error && (
-          <details className="mt-6 text-left">
-            <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
-              开发者信息 (仅开发环境显示)
-            </summary>
-            <div className="bg-gray-100 p-3 rounded text-xs font-mono overflow-auto max-h-40">
-              <div className="mb-2">
-                <strong>错误信息:</strong> {error.message}
-              </div>
-              {error.stack && (
-                <div className="mb-2">
-                  <strong>错误堆栈:</strong>
-                  <pre className="whitespace-pre-wrap">{error.stack}</pre>
-                </div>
-              )}
-              {errorInfo?.componentStack && (
-                <div>
-                  <strong>组件堆栈:</strong>
-                  <pre className="whitespace-pre-wrap">{errorInfo.componentStack}</pre>
-                </div>
-              )}
-            </div>
-          </details>
-        )}
-      </div>
-    </div>
-  );
+					<HStack w="full" gap={3}>
+						<Button
+							variant="outline"
+							onClick={() => window.location.reload()}
+							size="lg"
+							flex={1}
+						>
+							<RefreshCw size={16} />
+							刷新页面
+						</Button>
+
+						<Button
+							variant="ghost"
+							onClick={() => (window.location.href = '/')}
+							size="lg"
+							flex={1}
+						>
+							<Home size={16} />
+							返回首页
+						</Button>
+					</HStack>
+				</VStack>
+
+				{/* 错误详情 (开发模式) */}
+				{showErrorDetails && error && (
+					<Box
+						p={4}
+						bg="red.50"
+						borderRadius="md"
+						border="1px solid"
+						borderColor="red.200"
+					>
+						<HStack justify="space-between" mb={3}>
+							<Text fontWeight="bold" color="red.700">
+								错误详情 (开发模式)
+							</Text>
+							<Badge colorPalette="red" size="sm">
+								DEBUG
+							</Badge>
+						</HStack>
+
+						<VStack align="stretch" gap={3}>
+							<Box>
+								<Text
+									fontSize="sm"
+									fontWeight="semibold"
+									color="red.700"
+									mb={1}
+								>
+									错误消息:
+								</Text>
+								<Text
+									fontSize="sm"
+									color="red.600"
+									fontFamily="mono"
+									p={2}
+									bg="red.100"
+									borderRadius="sm"
+								>
+									{error.message}
+								</Text>
+							</Box>
+
+							{error.stack && (
+								<Box>
+									<Text
+										fontSize="sm"
+										fontWeight="semibold"
+										color="red.700"
+										mb={1}
+									>
+										错误堆栈:
+									</Text>
+									<Text
+										fontSize="xs"
+										color="red.500"
+										fontFamily="mono"
+										whiteSpace="pre-wrap"
+										p={2}
+										bg="red.100"
+										borderRadius="sm"
+										maxH="200px"
+										overflowY="auto"
+									>
+										{error.stack}
+									</Text>
+								</Box>
+							)}
+
+							{errorInfo?.componentStack && (
+								<Box>
+									<Text
+										fontSize="sm"
+										fontWeight="semibold"
+										color="red.700"
+										mb={1}
+									>
+										组件堆栈:
+									</Text>
+									<Text
+										fontSize="xs"
+										color="red.500"
+										fontFamily="mono"
+										whiteSpace="pre-wrap"
+										p={2}
+										bg="red.100"
+										borderRadius="sm"
+										maxH="150px"
+										overflowY="auto"
+									>
+										{errorInfo.componentStack}
+									</Text>
+								</Box>
+							)}
+						</VStack>
+					</Box>
+				)}
+			</VStack>
+		</Container>
+	)
 }
 
-/**
- * 简化的错误边界Hook
- */
-export function useErrorBoundary() {
-  const [error, setError] = React.useState<Error | null>(null);
-
-  const resetError = React.useCallback(() => {
-    setError(null);
-  }, []);
-
-  const captureError = React.useCallback((error: Error) => {
-    setError(error);
-  }, []);
-
-  React.useEffect(() => {
-    if (error) {
-      throw error;
-    }
-  }, [error]);
-
-  return { captureError, resetError };
+// 导出的错误边界组件
+export function ErrorBoundary(props: Props) {
+	return <ErrorBoundaryClass {...props} />
 }
 
-/**
- * 异步错误边界Hook
- */
+// 高阶组件：为组件添加错误边界
+export function withErrorBoundary<P extends object>(
+	Component: React.ComponentType<P>,
+	errorBoundaryProps?: Omit<Props, 'children'>,
+) {
+	return function WrappedComponent(props: P) {
+		return (
+			<ErrorBoundary {...errorBoundaryProps}>
+				<Component {...props} />
+			</ErrorBoundary>
+		)
+	}
+}
+
+// Hook：用于函数组件中的错误处理
+export function useErrorHandler() {
+	const [error, setError] = useState<Error | null>(null)
+
+	const resetError = useCallback(() => {
+		setError(null)
+	}, [])
+
+	const handleError = useCallback((error: Error) => {
+		setError(error)
+		console.error('Error caught by useErrorHandler:', error)
+	}, [])
+
+	return {
+		error,
+		resetError,
+		handleError,
+		hasError: !!error,
+	}
+}
+
+// 异步错误处理Hook
 export function useAsyncError() {
-  const { captureError } = useErrorBoundary();
+	const [, setError] = useState()
 
-  return React.useCallback(
-    (error: Error) => {
-      // 在下一个事件循环中抛出错误，确保错误边界能够捕获
-      setTimeout(() => {
-        captureError(error);
-      }, 0);
-    },
-    [captureError]
-  );
+	return useCallback((error: Error) => {
+		setError(() => {
+			throw error
+		})
+	}, [])
 }
 
-export default ErrorBoundary;
+export default ErrorBoundary
