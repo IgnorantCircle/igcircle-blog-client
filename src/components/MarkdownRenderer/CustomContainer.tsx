@@ -10,7 +10,11 @@ interface CustomContainerProps {
 	children: React.ReactNode
 }
 
-const CustomContainer: React.FC<CustomContainerProps> = ({ type, title, children }) => {
+const CustomContainer: React.FC<CustomContainerProps> = ({
+	type,
+	title,
+	children,
+}) => {
 	// 根据类型设置图标和样式
 	const getContainerConfig = (containerType: string) => {
 		switch (containerType) {
@@ -47,18 +51,14 @@ const CustomContainer: React.FC<CustomContainerProps> = ({ type, title, children
 	if (type === 'detail') {
 		return <DetailContainer title={title}>{children}</DetailContainer>
 	}
-	
+
 	return (
 		<div className={`custom-container container-${type}`} data-type={type}>
 			<div className="container-header">
 				<span className="container-icon">{config.icon}</span>
-				<span className="container-title">
-					{title || config.label}
-				</span>
+				<span className="container-title">{title || config.label}</span>
 			</div>
-			<div className="container-content">
-				{children}
-			</div>
+			<div className="container-content">{children}</div>
 		</div>
 	)
 }

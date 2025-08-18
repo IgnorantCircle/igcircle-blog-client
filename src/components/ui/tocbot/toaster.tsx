@@ -23,26 +23,28 @@ export const Toaster = () => {
 						toast.type === 'success'
 							? 'green.400'
 							: toast.type === 'error'
-							? 'red.400'
-							: toast.type === 'warning'
-							? 'orange.400'
-							: 'blue.400'
-						
+								? 'red.400'
+								: toast.type === 'warning'
+									? 'orange.400'
+									: 'blue.400'
 					}
-					p={3} borderRadius='md' m={2} 
-					>
-					<Box color='white' >
-						{toast.title && <Box fontWeight='bold'>{toast.title}</Box>}
+					p={3}
+					borderRadius="md"
+					m={2}
+				>
+					<Box color="white">
+						{toast.title && <Box fontWeight="bold">{toast.title}</Box>}
 						{toast.description && <Box>{toast.description}</Box>}
 					</Box>
 					{toast.closable && (
 						<IconButton
-							aria-label='Close toast'
-							size='sm'
+							aria-label="Close toast"
+							size="sm"
 							variant="ghost"
 							bg={'transparent'}
 							color={'gray.50'}
-							onClick={() => toaster.dismiss(toast.id)}>
+							onClick={() => toaster.dismiss(toast.id)}
+						>
 							<LuX />
 						</IconButton>
 					)}

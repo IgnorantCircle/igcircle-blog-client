@@ -95,24 +95,26 @@ export function TableOfContents({ content }: TableOfContentsProps) {
 
 					// 为所有有子列表的项目添加折叠样式和事件
 					const listItems = tocContainer.querySelectorAll('.toc-list-item')
-					listItems.forEach(listItem => {
+					listItems.forEach((listItem) => {
 						const subList = listItem.querySelector('.toc-list')
 						if (subList && subList.children.length > 0) {
 							listItem.classList.add('is-collapsible')
-							
+
 							// 获取当前项目的深度
 							const depth = getDepth(listItem)
-							
+
 							// 如果深度大于等于3（第4层及以后），默认折叠
 							if (depth >= 3) {
 								listItem.classList.add('is-collapsed')
 							}
-							
+
 							// 为折叠图标添加点击事件
 							const link = listItem.querySelector('.toc-link') as HTMLElement
 							if (link) {
 								// 创建折叠图标元素
-								let collapseIcon = link.querySelector('.collapse-icon') as HTMLElement
+								let collapseIcon = link.querySelector(
+									'.collapse-icon',
+								) as HTMLElement
 								if (!collapseIcon) {
 									collapseIcon = document.createElement('span')
 									collapseIcon.className = 'collapse-icon'
@@ -131,25 +133,29 @@ export function TableOfContents({ content }: TableOfContentsProps) {
 									link.style.position = 'relative'
 									link.appendChild(collapseIcon)
 								}
-								
+
 								// 设置初始图标状态
 								if (listItem.classList.contains('is-collapsed')) {
-									(collapseIcon as HTMLElement).style.transform = 'translateY(-50%) rotate(-90deg)'
+									;(collapseIcon as HTMLElement).style.transform =
+										'translateY(-50%) rotate(-90deg)'
 								} else {
-									(collapseIcon as HTMLElement).style.transform = 'translateY(-50%)'
+									;(collapseIcon as HTMLElement).style.transform =
+										'translateY(-50%)'
 								}
-								
+
 								// 为折叠图标添加点击事件
 								collapseIcon.addEventListener('click', (e) => {
 									e.preventDefault()
 									e.stopPropagation()
 									handleToggleCollapse(listItem as HTMLElement)
-									
+
 									// 更新图标状态
 									if (listItem.classList.contains('is-collapsed')) {
-										(collapseIcon as HTMLElement).style.transform = 'translateY(-50%) rotate(-90deg)'
+										;(collapseIcon as HTMLElement).style.transform =
+											'translateY(-50%) rotate(-90deg)'
 									} else {
-										(collapseIcon as HTMLElement).style.transform = 'translateY(-50%)'
+										;(collapseIcon as HTMLElement).style.transform =
+											'translateY(-50%)'
 									}
 								})
 							}
@@ -164,8 +170,6 @@ export function TableOfContents({ content }: TableOfContentsProps) {
 			tocbot.destroy()
 		}
 	}, [content, getTocbotConfig, handleToggleCollapse])
-
-
 
 	// 主题变化时刷新
 	useEffect(() => {
@@ -184,24 +188,26 @@ export function TableOfContents({ content }: TableOfContentsProps) {
 
 	return (
 		<Box
-			position='sticky'
+			position="sticky"
 			top={20}
-			w='280px'
-			maxH='calc(100vh - 120px)'
-			overflowY='auto'
+			w="280px"
+			maxH="calc(100vh - 120px)"
+			overflowY="auto"
 			bg={{ base: 'white', _dark: 'gray.800' }}
-			border='1px solid'
+			border="1px solid"
 			borderColor={{ base: 'gray.200', _dark: 'gray.600' }}
-			borderRadius='lg'
+			borderRadius="lg"
 			p={4}
-			boxShadow='sm'>
+			boxShadow="sm"
+		>
 			<Text
-				fontWeight='bold'
+				fontWeight="bold"
 				mb={4}
-				color={{ base: 'gray.900', _dark: 'white' }}>
+				color={{ base: 'gray.900', _dark: 'white' }}
+			>
 				目录
 			</Text>
-			<div className='js-toc' ref={tocRef}></div>
+			<div className="js-toc" ref={tocRef}></div>
 		</Box>
 	)
 }

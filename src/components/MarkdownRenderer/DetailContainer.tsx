@@ -16,13 +16,13 @@ const DetailContainer: React.FC<DetailContainerProps> = ({
 	const [isOpen, setIsOpen] = useState(false)
 
 	return (
-		<div className='detail-container' >
-			<button className='detail-trigger' onClick={() => setIsOpen(!isOpen)}>
+		<div className="detail-container">
+			<button className="detail-trigger" onClick={() => setIsOpen(!isOpen)}>
 				{isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
 				<span>{title || '展开查看内容'}</span>
 			</button>
 			<Collapsible.Root open={isOpen}>
-				<Collapsible.Content className='detail-content'>
+				<Collapsible.Content className="detail-content">
 					{children}
 				</Collapsible.Content>
 			</Collapsible.Root>

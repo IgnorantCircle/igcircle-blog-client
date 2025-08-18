@@ -2,33 +2,27 @@
 export function isValidAndSafeUrl(url: string): boolean {
 	try {
 		const urlObj = new URL(url)
-		
+
 		// 只允许 http 和 https 协议
 		if (!['http:', 'https:'].includes(urlObj.protocol)) {
 			return false
 		}
-		
+
 		// 检查是否为可信域名（可以根据需要扩展）
 		const trustedDomains = [
-			'youtube.com',
-			'www.youtube.com',
-			'youtu.be',
-			'vimeo.com',
-			'player.vimeo.com',
 			'codepen.io',
 			'codesandbox.io',
 			'stackblitz.com',
 			'jsfiddle.net',
-			'replit.com',
 			'github.com',
-			'gist.github.com'
+			'gist.github.com',
 		]
-		
+
 		const hostname = urlObj.hostname.toLowerCase()
-		const isAllowed = trustedDomains.some(domain => 
-			hostname === domain || hostname.endsWith('.' + domain)
+		const isAllowed = trustedDomains.some(
+			(domain) => hostname === domain || hostname.endsWith('.' + domain),
 		)
-		
+
 		return isAllowed
 	} catch (error) {
 		console.error('URL验证失败:', error)
@@ -53,12 +47,12 @@ export function preprocessCustomContainers(markdown: string): string {
 
 	// 处理普通容器
 	const containerRegex = /:::\s*([\w-]+)(?:\s*\[([^\]]+)])?\s*([\s\S]*?)\n?:::/g
-	
+
 	result = result.replace(containerRegex, (match, type, title, content) => {
 		if (type === 'iframe') {
 			// 处理iframe
 			const url = content.trim()
-			
+
 			// 验证URL安全性
 			if (!isValidAndSafeUrl(url)) {
 				console.warn('Unsafe or invalid iframe URL blocked:', url)
@@ -68,7 +62,7 @@ export function preprocessCustomContainers(markdown: string): string {
 					<p>只允许来自可信域名的iframe内容。</p>
 				</div>`
 			}
-			
+
 			// 转义URL以防止XSS
 			const safeUrl = escapeHtml(url)
 			return `<div class="iframe-container" data-type="iframe">
@@ -104,15 +98,24 @@ ${content}
 	})
 
 	// 处理普通代码块标题 - 将 ```lang [title] 转换为特殊注释格式
-	result = result.replace(/```(\w+)\s*\[([^\]]+)\]/g, (match: string, lang: string, blockTitle: string) => {
-		// 使用特殊注释格式来传递标题信息
-		return `\`\`\`${lang}\n<!-- BLOCK_TITLE: ${escapeHtml(blockTitle)} -->`
-	})
-	
+	result = result.replace(
+		/```(\w+)\s*\[([^\]]+)\]/g,
+		(match: string, lang: string, blockTitle: string) => {
+			// 使用特殊注释格式来传递标题信息
+			return `\`\`\`${lang}\n<!-- BLOCK_TITLE: ${escapeHtml(blockTitle)} -->`
+		},
+	)
+
 	// 处理代码组内的代码块标题 - 将代码块内的 [title] 行转换为 data-title 属性
-	result = result.replace(/(```\w+[^\n]*\n)\s*\[([^\]]+)\]\s*\n/g, (match: string, codeStart: string, blockTitle: string) => {
-		return codeStart.replace('```', `\`\`\` data-title="${escapeHtml(blockTitle)}"`)
-	})
+	result = result.replace(
+		/(```\w+[^\n]*\n)\s*\[([^\]]+)\]\s*\n/g,
+		(match: string, codeStart: string, blockTitle: string) => {
+			return codeStart.replace(
+				'```',
+				`\`\`\` data-title="${escapeHtml(blockTitle)}"`,
+			)
+		},
+	)
 
 	return result
 }

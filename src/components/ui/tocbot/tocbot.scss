@@ -1,211 +1,211 @@
 /* Tocbot 目录样式 */
 .js-toc {
-  font-size: 14px;
-  line-height: 1.5;
+	font-size: 14px;
+	line-height: 1.5;
 
-  /* 滚动条样式 */
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
+	/* 滚动条样式 */
+	&::-webkit-scrollbar {
+		width: 4px;
+	}
 
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
+	&::-webkit-scrollbar-track {
+		background: transparent;
+	}
 
-  &::-webkit-scrollbar-thumb {
-    background: var(--chakra-colors-gray-300);
-    border-radius: 2px;
+	&::-webkit-scrollbar-thumb {
+		background: var(--chakra-colors-gray-300);
+		border-radius: 2px;
 
-    &:hover {
-      background: var(--chakra-colors-gray-400);
-    }
-  }
+		&:hover {
+			background: var(--chakra-colors-gray-400);
+		}
+	}
 
-  /* 深色模式滚动条 */
-  [data-theme="dark"] &::-webkit-scrollbar-thumb {
-    background: var(--chakra-colors-gray-600);
+	/* 深色模式滚动条 */
+	[data-theme='dark'] &::-webkit-scrollbar-thumb {
+		background: var(--chakra-colors-gray-600);
 
-    &:hover {
-      background: var(--chakra-colors-gray-500);
-    }
-  }
+		&:hover {
+			background: var(--chakra-colors-gray-500);
+		}
+	}
 }
 
 /* 目录列表样式 */
 .toc-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: block;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: block;
 
-  .toc-list {
-    padding-left: 16px;
-    margin-top: 4px;
-  }
+	.toc-list {
+		padding-left: 16px;
+		margin-top: 4px;
+	}
 }
 
 /* 目录列表项样式 */
 .toc-list-item {
-  margin: 0;
-  padding: 0;
-  display: block;
+	margin: 0;
+	padding: 0;
+	display: block;
 
-  /* 不同级别标题的样式 */
-  &[data-level="1"] > .toc-link {
-    font-weight: 600;
-    font-size: 15px;
-  }
+	/* 不同级别标题的样式 */
+	&[data-level='1'] > .toc-link {
+		font-weight: 600;
+		font-size: 15px;
+	}
 
-  &[data-level="2"] > .toc-link {
-    font-weight: 500;
-    padding-left: 20px;
-  }
+	&[data-level='2'] > .toc-link {
+		font-weight: 500;
+		padding-left: 20px;
+	}
 
-  &[data-level="3"] > .toc-link {
-    font-weight: 400;
-    padding-left: 28px;
-    font-size: 13px;
-  }
+	&[data-level='3'] > .toc-link {
+		font-weight: 400;
+		padding-left: 28px;
+		font-size: 13px;
+	}
 
-  &[data-level="4"] > .toc-link,
-  &[data-level="5"] > .toc-link,
-  &[data-level="6"] > .toc-link {
-    font-weight: 400;
-    padding-left: 36px;
-    font-size: 12px;
-    color: var(--chakra-colors-gray-500);
-  }
+	&[data-level='4'] > .toc-link,
+	&[data-level='5'] > .toc-link,
+	&[data-level='6'] > .toc-link {
+		font-weight: 400;
+		padding-left: 36px;
+		font-size: 12px;
+		color: var(--chakra-colors-gray-500);
+	}
 
-  /* 深色模式下高级别标题 */
-  [data-theme="dark"] &[data-level="4"] > .toc-link,
-  [data-theme="dark"] &[data-level="5"] > .toc-link,
-  [data-theme="dark"] &[data-level="6"] > .toc-link {
-    color: var(--chakra-colors-gray-500);
-  }
+	/* 深色模式下高级别标题 */
+	[data-theme='dark'] &[data-level='4'] > .toc-link,
+	[data-theme='dark'] &[data-level='5'] > .toc-link,
+	[data-theme='dark'] &[data-level='6'] > .toc-link {
+		color: var(--chakra-colors-gray-500);
+	}
 
-  /* 确保有子项的项目显示折叠图标 */
-  &:has(.toc-list) > .toc-link::before {
-    content: '▼';
-    position: absolute;
-    left: -12px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 10px;
-    color: var(--chakra-colors-gray-400);
-    transition: transform 0.2s ease;
-    cursor: pointer;
-  }
+	/* 确保有子项的项目显示折叠图标 */
+	&:has(.toc-list) > .toc-link::before {
+		content: '▼';
+		position: absolute;
+		left: -12px;
+		top: 50%;
+		transform: translateY(-50%);
+		font-size: 10px;
+		color: var(--chakra-colors-gray-400);
+		transition: transform 0.2s ease;
+		cursor: pointer;
+	}
 
-  &.is-collapsed:has(.toc-list) > .toc-link::before {
-    transform: translateY(-50%) rotate(-90deg);
-  }
+	&.is-collapsed:has(.toc-list) > .toc-link::before {
+		transform: translateY(-50%) rotate(-90deg);
+	}
 }
 
 /* 目录链接样式 */
 .toc-link {
-  display: block;
-  padding: 6px 12px;
-  margin: 2px 0;
-  text-decoration: none;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  color: var(--chakra-colors-gray-600);
-  font-weight: 400;
-  border-left: 3px solid transparent;
-  scroll-behavior: smooth;
+	display: block;
+	padding: 6px 12px;
+	margin: 2px 0;
+	text-decoration: none;
+	border-radius: 6px;
+	transition: all 0.2s ease;
+	color: var(--chakra-colors-gray-600);
+	font-weight: 400;
+	border-left: 3px solid transparent;
+	scroll-behavior: smooth;
 
-  /* 链接悬停效果 */
-  &:hover {
-    background-color: var(--chakra-colors-gray-50);
-    color: var(--chakra-colors-gray-800);
-    text-decoration: none;
-  }
+	/* 链接悬停效果 */
+	&:hover {
+		background-color: var(--chakra-colors-gray-50);
+		color: var(--chakra-colors-gray-800);
+		text-decoration: none;
+	}
 
-  /* 激活状态的链接 */
-  &.is-active-link {
-    background-color: var(--chakra-colors-blue-50);
-    color: var(--chakra-colors-blue-600);
-    border-left-color: var(--chakra-colors-blue-500);
-    font-weight: 500;
-  }
+	/* 激活状态的链接 */
+	&.is-active-link {
+		background-color: var(--chakra-colors-blue-50);
+		color: var(--chakra-colors-blue-600);
+		border-left-color: var(--chakra-colors-blue-500);
+		font-weight: 500;
+	}
 
-  /* 无障碍支持 */
-  &:focus {
-    outline: 2px solid var(--chakra-colors-blue-500);
-    outline-offset: 2px;
-  }
+	/* 无障碍支持 */
+	&:focus {
+		outline: 2px solid var(--chakra-colors-blue-500);
+		outline-offset: 2px;
+	}
 
-  /* 深色模式下的链接颜色 */
-  [data-theme="dark"] & {
-    color: var(--chakra-colors-gray-400);
+	/* 深色模式下的链接颜色 */
+	[data-theme='dark'] & {
+		color: var(--chakra-colors-gray-400);
 
-    &:hover {
-      background-color: var(--chakra-colors-gray-700);
-      color: var(--chakra-colors-gray-200);
-    }
+		&:hover {
+			background-color: var(--chakra-colors-gray-700);
+			color: var(--chakra-colors-gray-200);
+		}
 
-    &.is-active-link {
-      background-color: var(--chakra-colors-blue-900);
-      color: var(--chakra-colors-blue-300);
-      border-left-color: var(--chakra-colors-blue-400);
-    }
-  }
+		&.is-active-link {
+			background-color: var(--chakra-colors-blue-900);
+			color: var(--chakra-colors-blue-300);
+			border-left-color: var(--chakra-colors-blue-400);
+		}
+	}
 }
 
 /* 可折叠状态 */
 .is-collapsed {
-  display: none;
+	display: none;
 
-  > .toc-list {
-    display: none !important;
-  }
+	> .toc-list {
+		display: none !important;
+	}
 }
 
 .is-collapsible {
-  position: relative;
+	position: relative;
 
-  > .toc-link {
-    cursor: pointer;
-    position: relative;
-  }
+	> .toc-link {
+		cursor: pointer;
+		position: relative;
+	}
 
-  /* 确保展开状态下的子列表可见 */
-  &:not(.is-collapsed) > .toc-list {
-    display: block;
-  }
+	/* 确保展开状态下的子列表可见 */
+	&:not(.is-collapsed) > .toc-list {
+		display: block;
+	}
 }
 
 /* 移动端样式调整 */
 .mobile-toc {
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
+	max-height: calc(100vh - 120px);
+	overflow-y: auto;
 
-  .toc-link {
-    padding: 8px 12px;
-    font-size: 15px;
-  }
+	.toc-link {
+		padding: 8px 12px;
+		font-size: 15px;
+	}
 }
 
 /* 桌面端样式调整 */
 .desktop-toc {
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
+	max-height: calc(100vh - 200px);
+	overflow-y: auto;
 }
 
 /* 响应式调整 */
 @media (max-width: 1024px) {
-  .js-toc {
-    font-size: 16px;
-  }
-  
-  .toc-link {
-    padding: 10px 16px;
-  }
+	.js-toc {
+		font-size: 16px;
+	}
+
+	.toc-link {
+		padding: 10px 16px;
+	}
 }
 
 /* 打印样式 */
 @media print {
-  .js-toc {
-    display: none;
-  }
+	.js-toc {
+		display: none;
+	}
 }

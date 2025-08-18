@@ -57,7 +57,7 @@ const languageAliases: Record<string, string[]> = {
 // 统一注册语言
 Object.entries(languageMap).forEach(([name, language]) => {
 	SyntaxHighlighter.registerLanguage(name, language)
-	
+
 	// 注册别名
 	if (languageAliases[name]) {
 		languageAliases[name].forEach((alias: string) => {
@@ -66,15 +66,11 @@ Object.entries(languageMap).forEach(([name, language]) => {
 	}
 })
 
-
-
 interface MarkdownRendererProps {
 	source: string
 	style?: React.CSSProperties
 	className?: string
 }
-
-
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 	source,
@@ -109,11 +105,17 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 	// 创建标题文本到ID的映射 - 使用 useMemo 优化
 	const getHeadingId = useMemo(() => {
 		return (children: React.ReactNode): string => {
-			const text = typeof children === 'string' ? children : 
-				Array.isArray(children) ? children.join('') : children?.toString() || ''
-			
-			const heading = headings.find(h => h.text === text.trim())
-			return heading ? heading.id : `heading-${Math.random().toString(36).substr(2, 9)}`
+			const text =
+				typeof children === 'string'
+					? children
+					: Array.isArray(children)
+						? children.join('')
+						: children?.toString() || ''
+
+			const heading = headings.find((h) => h.text === text.trim())
+			return heading
+				? heading.id
+				: `heading-${Math.random().toString(36).substr(2, 9)}`
 		}
 	}, [headings])
 
@@ -166,7 +168,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 						const hasOnlyImage =
 							React.Children.count(children) === 1 &&
 							React.Children.toArray(children).every(
-								(child) => React.isValidElement(child) && child.type === 'img'
+								(child) => React.isValidElement(child) && child.type === 'img',
 							)
 
 						if (hasOnlyImage) {
@@ -186,7 +188,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 							<div className="blockquote-content">{children}</div>
 						</blockquote>
 					),
-					// 列表 - 更好的视觉层次
+					// 列表
 					ul: ({ children, ...props }) => (
 						<ul className="list-unordered" {...props}>
 							{children}
@@ -208,7 +210,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 							{children}
 						</a>
 					),
-					// 表格 - 更现代化的设计
+					// 表格
 					table: ({ children, ...props }) => (
 						<div className="table-wrapper">
 							<table className="table" {...props}>
@@ -244,127 +246,140 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 						<img src={src} alt={alt} className="image" {...props} />
 					),
 					// 代码块和内联代码
-			code({ className, children, ...props }: ComponentPropsWithoutRef<'code'> & { 'data-title'?: string; title?: string }) {
-				const match = /language-(\w+)/.exec(className || '')
-				const language = match ? match[1] : 'text'
-				let codeContent = String(children).replace(/\n$/, '')
-				// 代码块（有语言标识，如 ```javascript）
-				const inline = !className?.startsWith('language-')
-				// 内联代码
-				if (inline) {
-					return (
-						<code className="inline-code" {...props}>
-							{children}
-						</code>
-					)
-				}
-
-				// 从 props 中提取代码标题，优先使用 data-title
-				let codeTitle = props['data-title'] || (props as { title?: string }).title || ''
-				
-				// 检查代码内容中是否有特殊注释格式的标题
-				const titleCommentMatch = codeContent.match(/^<!--\s*BLOCK_TITLE:\s*([^>]+)\s*-->\s*\n?/)
-				if (titleCommentMatch) {
-					codeTitle = titleCommentMatch[1].trim()
-					// 从代码内容中移除标题注释
-					codeContent = codeContent.replace(/^<!--\s*BLOCK_TITLE:\s*[^>]+\s*-->\s*\n?/, '')
-				}
-				
-				// 如果没有标题，尝试从代码内容中提取 [title] 格式的标题
-				if (!codeTitle) {
-					const titleMatch = codeContent.match(/^\s*\[([^\]]+)\]\s*$/m)
-					if (titleMatch) {
-						codeTitle = titleMatch[1]
-						// 从代码内容中移除标题行
-						codeContent = codeContent.replace(/^\s*\[([^\]]+)\]\s*\n?/m, '')
-					}
-				}
-
-					// 代码块
-					return (
-						<div className="code-block">
-							{/* 代码块头部 */}
-							<div className="code-header">
-								<div className="code-controls">
-									<div className="code-dots">
-										<div className="dot dot-red"></div>
-										<div className="dot dot-yellow"></div>
-										<div className="dot dot-green"></div>
-									</div>
-									<div className="code-info">
-										<span className="code-language">{language}</span>
-										{codeTitle && (
-											<span className="code-title">{codeTitle}</span>
-										)}
-									</div>
-								</div>
-								<CodeCopyButton code={codeContent} />
-							</div>
-							{/* 代码内容 */}
-							<div className="code-content">
-								<SyntaxHighlighter
-									language={language}
-									style={isDark ? atomOneDark : atomOneLight}
-									showLineNumbers={true}
-									useInlineStyles={false}
-									customStyle={{
-										margin: 0,
-										padding: '1.5rem',
-										background: 'transparent',
-										fontSize: '1rem',
-										lineHeight: '1.5',
-										borderRadius: 0,
-									}}
-									lineNumberStyle={{
-										minWidth: '3em',
-										paddingRight: '1em',
-										color: 'var(--text-muted)',
-										textAlign: 'right',
-										userSelect: 'none',
-									}}
-									className="syntax-highlighter"
-								>
-									{codeContent}
-								</SyntaxHighlighter>
-							</div>
-						</div>
-					)
-				},
-					// 处理自定义容器指令
-					div({
-					className,
-					children,
-					...props
-				}: React.HTMLAttributes<HTMLDivElement> & {
-					node?: Node
-					'data-title'?: string
-				}) {
-					if (className && className.includes('custom-container')) {
-					const typeMatch = className.match(/custom-container-([\w-]+)/)
-					if (typeMatch) {
-							const type = typeMatch[1]
-							const title = (props['data-title'] as string) || undefined
-
-							// 如果是iframe容器，直接渲染内容
-							if (type === 'iframe') {
-								return <div className="iframe-container">{children}</div>
-							}
-
+					code({
+						className,
+						children,
+						...props
+					}: ComponentPropsWithoutRef<'code'> & {
+						'data-title'?: string
+						title?: string
+					}) {
+						const match = /language-(\w+)/.exec(className || '')
+						const language = match ? match[1] : 'text'
+						let codeContent = String(children).replace(/\n$/, '')
+						// 代码块（有语言标识，如 ```javascript）
+						const inline = !className?.startsWith('language-')
+						// 内联代码
+						if (inline) {
 							return (
-								<CustomContainer type={type} title={title}>
+								<code className="inline-code" {...props}>
 									{children}
-								</CustomContainer>
+								</code>
 							)
 						}
-					}
 
-					// 默认div渲染
-					return (
-						<div className={className} {...props}>
-							{children}
-						</div>
-					)
-				},
+						// 从 props 中提取代码标题，优先使用 data-title
+						let codeTitle =
+							props['data-title'] || (props as { title?: string }).title || ''
+
+						// 检查代码内容中是否有特殊注释格式的标题
+						const titleCommentMatch = codeContent.match(
+							/^<!--\s*BLOCK_TITLE:\s*([^>]+)\s*-->\s*\n?/,
+						)
+						if (titleCommentMatch) {
+							codeTitle = titleCommentMatch[1].trim()
+							// 从代码内容中移除标题注释
+							codeContent = codeContent.replace(
+								/^<!--\s*BLOCK_TITLE:\s*[^>]+\s*-->\s*\n?/,
+								'',
+							)
+						}
+
+						// 如果没有标题，尝试从代码内容中提取 [title] 格式的标题
+						if (!codeTitle) {
+							const titleMatch = codeContent.match(/^\s*\[([^\]]+)\]\s*$/m)
+							if (titleMatch) {
+								codeTitle = titleMatch[1]
+								// 从代码内容中移除标题行
+								codeContent = codeContent.replace(/^\s*\[([^\]]+)\]\s*\n?/m, '')
+							}
+						}
+
+						// 代码块
+						return (
+							<div className="code-block">
+								{/* 代码块头部 */}
+								<div className="code-header">
+									<div className="code-controls">
+										<div className="code-dots">
+											<div className="dot dot-red"></div>
+											<div className="dot dot-yellow"></div>
+											<div className="dot dot-green"></div>
+										</div>
+										<div className="code-info">
+											<span className="code-language">{language}</span>
+											{codeTitle && (
+												<span className="code-title">{codeTitle}</span>
+											)}
+										</div>
+									</div>
+									<CodeCopyButton code={codeContent} />
+								</div>
+								{/* 代码内容 */}
+								<div className="code-content">
+									<SyntaxHighlighter
+										language={language}
+										style={isDark ? atomOneDark : atomOneLight}
+										showLineNumbers={true}
+										useInlineStyles={false}
+										customStyle={{
+											margin: 0,
+											padding: '1.5rem',
+											background: 'transparent',
+											fontSize: '1rem',
+											lineHeight: '1.5',
+											borderRadius: 0,
+										}}
+										lineNumberStyle={{
+											minWidth: '3em',
+											paddingRight: '1em',
+											color: 'var(--text-muted)',
+											textAlign: 'right',
+											userSelect: 'none',
+										}}
+										className="syntax-highlighter"
+									>
+										{codeContent}
+									</SyntaxHighlighter>
+								</div>
+							</div>
+						)
+					},
+					// 处理自定义容器指令
+					div({
+						className,
+						children,
+						...props
+					}: React.HTMLAttributes<HTMLDivElement> & {
+						node?: Node
+						'data-title'?: string
+					}) {
+						if (className && className.includes('custom-container')) {
+							const typeMatch = className.match(/custom-container-([\w-]+)/)
+							if (typeMatch) {
+								const type = typeMatch[1]
+								const title = (props['data-title'] as string) || undefined
+
+								// 如果是iframe容器，直接渲染内容
+								if (type === 'iframe') {
+									return <div className="iframe-container">{children}</div>
+								}
+
+								return (
+									<CustomContainer type={type} title={title}>
+										{children}
+									</CustomContainer>
+								)
+							}
+						}
+
+						// 默认div渲染
+						return (
+							<div className={className} {...props}>
+								{children}
+							</div>
+						)
+					},
 				}}
 			>
 				{processedSource}

@@ -48,7 +48,7 @@ const CodeGroup: React.FC<CodeGroupProps> = ({ title, children }) => {
 					if (!title && typeof codeProps.children === 'string') {
 						// 首先尝试提取 <!-- BLOCK_TITLE: xxx --> 格式的标题
 						const blockTitleMatch = codeProps.children.match(
-							/<!--\s*BLOCK_TITLE:\s*([^\s][^>]*?)\s*-->/
+							/<!--\s*BLOCK_TITLE:\s*([^\s][^>]*?)\s*-->/,
 						)
 						if (blockTitleMatch) {
 							title = blockTitleMatch[1].trim()
@@ -77,11 +77,12 @@ const CodeGroup: React.FC<CodeGroupProps> = ({ title, children }) => {
 		return (
 			<Box
 				p={4}
-				textAlign='center'
-				color='gray.500'
-				border='1px solid'
-				borderColor='gray.200'
-				borderRadius='md'>
+				textAlign="center"
+				color="gray.500"
+				border="1px solid"
+				borderColor="gray.200"
+				borderRadius="md"
+			>
 				未找到代码块
 			</Box>
 		)
@@ -90,9 +91,9 @@ const CodeGroup: React.FC<CodeGroupProps> = ({ title, children }) => {
 	if (codeBlocks.length === 1) {
 		// 如果只有一个代码块，直接显示，不需要标签页
 		return (
-			<Box className='code-group' mb={6}>
+			<Box className="code-group" mb={6}>
 				{title && (
-					<Box mb={1} fontWeight='semibold' fontSize='lg' color='gray.700'>
+					<Box mb={1} fontWeight="semibold" fontSize="lg" color="gray.700">
 						{title}
 					</Box>
 				)}
@@ -102,27 +103,25 @@ const CodeGroup: React.FC<CodeGroupProps> = ({ title, children }) => {
 	}
 
 	return (
-		<Box className='code-group' mb={6}>
+		<Box className="code-group" mb={6}>
 			{title && (
-				<Box mb={3} fontWeight='semibold' fontSize='lg' color='gray.700'>
+				<Box mb={3} fontWeight="semibold" fontSize="lg" color="gray.700">
 					{title}
 				</Box>
 			)}
-			<Tabs.Root defaultValue='0' variant='line' size='sm'>
-				<Tabs.List
-					my={3}
-					>
+			<Tabs.Root defaultValue="0" variant="line" size="sm">
+				<Tabs.List my={3}>
 					{codeBlocks.map((block, index) => (
 						<Tabs.Trigger
 							key={index}
 							value={index.toString()}
-							fontSize='sm'
-							fontWeight='medium'
+							fontSize="sm"
+							fontWeight="medium"
 							px={3}
 							py={2}
 							border="none"
-							color='fg.muted'
-							transition='all 0.2s'
+							color="fg.muted"
+							transition="all 0.2s"
 							_selected={{
 								bg: 'transparent',
 								color: 'fg',
@@ -131,7 +130,8 @@ const CodeGroup: React.FC<CodeGroupProps> = ({ title, children }) => {
 							_hover={{
 								bg: 'bg.info',
 								color: 'fg',
-							}}>
+							}}
+						>
 							{block.title}
 						</Tabs.Trigger>
 					))}
