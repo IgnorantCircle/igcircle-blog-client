@@ -1,21 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
-import { useToast } from '@/components/ui/Toast'
+import { showError, showSuccess } from '@/lib/error-handler'
 import { authApi } from '@/lib/api'
 import rsaUtil from '@/lib/rsa'
-import {
-	ApiError,
-	LoginRequest,
-	RegisterRequest,
-} from '@/types'
+import { rsaManager } from '@/lib/rsa-manager'
+import { LoginRequestType, RegisterRequestType } from '@/types'
 
-type TypeLoginFormDate = LoginRequest & { rememberMe: boolean }
+export type TypeLoginFormDate = LoginRequestType & { rememberMe: boolean }
 
-type TypeRegisterFormDate = RegisterRequest & {
+export type TypeRegisterFormDate = RegisterRequestType & {
 	confirmPassword: string
+	agreeToTerms: boolean
 }
 
 type FormData = TypeLoginFormDate | TypeRegisterFormDate
@@ -33,7 +31,7 @@ interface ValidationContext {
 interface ValidationRules {
 	[key: string]: (
 		value: string | boolean,
-		formData?: ValidationContext
+		formData?: ValidationContext,
 	) => string | null
 }
 
@@ -101,32 +99,89 @@ export const useAuthForm = ({ type, onSuccess }: UseAuthFormOptions) => {
 					confirmPassword: '',
 					verificationCode: '',
 					agreeToTerms: false,
-			  } as TypeRegisterFormDate)
+				} as TypeRegisterFormDate),
 	)
 
 	const [errors, setErrors] = useState<Record<string, string>>({})
-	const [isLoading, setIsLoading] = useState(false)
 	const [showPassword, setShowPassword] = useState(false)
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
 	const { login } = useAuthStore()
-	const toast = useToast()
 	const router = useRouter()
 
-	// 组件挂载时获取RSA公钥
-	useEffect(() => {
-		const initRsaKey = async () => {
-			try {
-				const response = await authApi.getRsaPublicKey()
-				rsaUtil.setPublicKey(response.publicKey)
-			} catch (error) {
-				console.error('获取RSA公钥失败:', error)
-				toast.error('初始化加密失败，请刷新页面重试')
+	// 登录状态
+	const [isLoading, setIsLoading] = useState(false)
+
+	// 手动初始化RSA公钥的函数
+	const initializeRsaKey = async () => {
+		// 使用RSA管理器确保只获取一次公钥
+		await rsaManager.initialize()
+	}
+
+	// 执行登录
+	const performLogin = async (
+		loginData: { username: string; password: string },
+		rememberMe: boolean = false,
+	) => {
+		try {
+			setIsLoading(true)
+			const response = await authApi.login(loginData)
+			showSuccess('登录成功！')
+			login(response, rememberMe)
+			if (onSuccess) {
+				onSuccess()
+			} else {
+				router.push('/')
 			}
+		} catch (error) {
+			showError(error as Error, '用户登录')
+		} finally {
+			setIsLoading(false)
 		}
-		
-		initRsaKey()
-	}, [])
+	}
+
+	// 执行注册
+	const performRegister = async (registerData: RegisterRequestType) => {
+		try {
+			setIsLoading(true)
+			await authApi.register(registerData)
+			showSuccess('注册成功！欢迎加入我们！')
+			if (onSuccess) {
+				onSuccess()
+			}
+		} catch (error) {
+			showError(error as Error, '用户注册')
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	// 校验单个字段
+	const validateField = (fieldName: string): string | null => {
+		const rule = validationRules[fieldName]
+		if (!rule) return null
+
+		const validationContext: ValidationContext = {
+			password: formData.password || '',
+			type,
+		}
+
+		const error = rule(
+			formData[fieldName as keyof typeof formData],
+			validationContext,
+		)
+
+		return error
+	}
+
+	// 处理字段失去焦点时的校验
+	const handleFieldBlur = (fieldName: string) => {
+		const error = validateField(fieldName)
+		setErrors((prev) => ({
+			...prev,
+			[fieldName]: error || '',
+		}))
+	}
 
 	const validateForm = (): boolean => {
 		const newErrors: Record<string, string> = {}
@@ -140,7 +195,7 @@ export const useAuthForm = ({ type, onSuccess }: UseAuthFormOptions) => {
 			if (rule) {
 				const error = rule(
 					formData[key as keyof typeof formData],
-					validationContext
+					validationContext,
 				)
 				if (error) {
 					newErrors[key] = error
@@ -158,8 +213,6 @@ export const useAuthForm = ({ type, onSuccess }: UseAuthFormOptions) => {
 			...prev,
 			[name]: inputType === 'checkbox' ? checked : value,
 		}))
-
-		// Clear field error when user starts typing
 		if (errors[name]) {
 			setErrors((prev) => ({ ...prev, [name]: '' }))
 		}
@@ -172,52 +225,33 @@ export const useAuthForm = ({ type, onSuccess }: UseAuthFormOptions) => {
 			return
 		}
 
-		setIsLoading(true)
+		// 检查RSA公钥是否已设置
+		if (!rsaUtil.hasPublicKey()) {
+			showError(new Error('加密初始化失败，请刷新页面重试'), 'RSA加密初始化')
+			return
+		}
 
-		try {
-			// 检查RSA公钥是否已设置
-			if (!rsaUtil.hasPublicKey()) {
-				toast.error('加密初始化失败，请刷新页面重试')
-				return
-			}
-
-			if (type === 'login') {
-				const loginData = formData as LoginRequest
-				// 加密密码
-				const encryptedPassword = rsaUtil.encrypt(loginData.password)
-				const response = await authApi.login({
+		if (type === 'login') {
+			const loginData = formData as TypeLoginFormDate
+			// 加密密码
+			const encryptedPassword = rsaUtil.encrypt(loginData.password)
+			await performLogin(
+				{
 					username: loginData.username,
 					password: encryptedPassword,
-				})
-
-				toast.success('登录成功！')
-				login(response)
-			} else {
-				const registerData = formData as RegisterRequest
-				// 加密密码
-				const encryptedPassword = rsaUtil.encrypt(registerData.password)
-				await authApi.register({
-					username: registerData.username,
-					email: registerData.email,
-					password: encryptedPassword,
-					verificationCode: registerData.verificationCode,
-				})
-				router.push('/login')
-				toast.success('注册成功！欢迎加入我们！')
-			}
-
-			if (onSuccess) {
-				onSuccess()
-			} else {
-				router.push('/')
-			}
-		} catch (err: unknown) {
-			const error = err as ApiError
-			const errorMessage =
-				error.message || `${type === 'login' ? '登录' : '注册'}失败，请重试`
-			toast.error(errorMessage)
-		} finally {
-			setIsLoading(false)
+				},
+				loginData.rememberMe,
+			)
+		} else {
+			const registerData = formData as RegisterRequestType
+			// 加密密码
+			const encryptedPassword = rsaUtil.encrypt(registerData.password)
+			await performRegister({
+				username: registerData.username,
+				email: registerData.email,
+				password: encryptedPassword,
+				verificationCode: registerData.verificationCode,
+			})
 		}
 	}
 
@@ -229,8 +263,13 @@ export const useAuthForm = ({ type, onSuccess }: UseAuthFormOptions) => {
 		showConfirmPassword,
 		setShowPassword,
 		setShowConfirmPassword,
+		setFormData,
+		setErrors,
 		handleInputChange,
 		handleSubmit,
 		validateForm,
+		validateField,
+		handleFieldBlur,
+		initializeRsaKey,
 	}
 }
