@@ -1,23 +1,13 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
-
-const geistSans = Geist({
-	variable: '--font-geist-sans',
-	subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-	variable: '--font-geist-mono',
-	subsets: ['latin'],
-})
+import { Providers } from './providers'
+import { Toaster } from '@/components/ui/tocbot/toaster'
 
 export const metadata: Metadata = {
-	title: 'igCircle Blog - 技术分享与学习成长',
-	description: '知识就像一个圆，你知道的越多，你不知道的就越多',
-	keywords: '无知的圆,igCricle,技术博客,编程,开发,前端,后端,全栈',
+	title: '技术博客 - igCircle Blog',
+	description: '技术博客，分享前端、后端等的知识，以及个人经验',
+	keywords:
+		'博客,文章,技术,前端,后端,JavaScript,TypeScript,Vue,React,Node,MongoDB,MySQL,Docker,Linux,Git',
 	authors: [{ name: 'igCircle' }],
 	viewport: 'width=device-width, initial-scale=1',
 }
@@ -28,12 +18,12 @@ export default function RootLayout({
 	children: React.ReactNode
 }>) {
 	return (
-		<html lang='zh-CN'>
-			<body
-				className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
-				<Header />
-				<main className='flex-1'>{children}</main>
-				<Footer />
+		<html lang="zh-CN">
+			<body>
+				<Providers>
+					{children}
+					<Toaster />
+				</Providers>
 			</body>
 		</html>
 	)

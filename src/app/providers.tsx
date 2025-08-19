@@ -206,7 +206,27 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
 	// 防止服务端渲染不匹配
 	if (!mounted) {
-		return <ChakraProvider value={system}>{children}</ChakraProvider>
+		return (
+			<ChakraProvider value={system}>
+				<AuthModalProvider>
+					<ErrorBoundary
+						showErrorDetails={process.env.NODE_ENV === 'development'}
+						onError={(error, errorInfo) => {
+							if (process.env.NODE_ENV === 'development') {
+								console.error('🚨 全局错误边界捕获到错误:', {
+									error,
+									errorInfo,
+								})
+							}
+							// 显示错误通知
+							showError(error, '页面渲染')
+						}}
+					>
+						{children}
+					</ErrorBoundary>
+				</AuthModalProvider>
+			</ChakraProvider>
+		)
 	}
 
 	return (
