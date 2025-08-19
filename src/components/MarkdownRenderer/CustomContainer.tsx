@@ -34,10 +34,10 @@ const CustomContainer: React.FC<CustomContainerProps> = ({
 				return { icon: '❌', label: '错误' }
 			case 'code-group':
 				return { icon: '📦', label: '代码组' }
-			case 'detail':
+			case 'details':
 				return { icon: '📋', label: '详情' }
 			default:
-				return { icon: '📄', label: '容器' }
+				return { icon: '📄', label: '笔记' }
 		}
 	}
 
@@ -48,7 +48,7 @@ const CustomContainer: React.FC<CustomContainerProps> = ({
 		return <CodeGroup title={title}>{children}</CodeGroup>
 	}
 
-	if (type === 'detail') {
+	if (type === 'details') {
 		return <DetailContainer title={title}>{children}</DetailContainer>
 	}
 
