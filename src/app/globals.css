@@ -209,6 +209,103 @@ body {
 	}
 }
 
+/* 移动端长文本换行处理 */
+@media (max-width: 768px) {
+	/* 全局文本换行优化 */
+	* {
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+		hyphens: auto;
+	}
+
+	/* 标题文本换行 */
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		word-break: break-word;
+		overflow-wrap: break-word;
+		hyphens: auto;
+		line-height: 1.3;
+	}
+
+	/* 段落文本优化 */
+	p {
+		word-break: break-word;
+		overflow-wrap: break-word;
+		hyphens: auto;
+		line-height: 1.6;
+	}
+
+	/* 链接文本换行 */
+	a {
+		word-break: break-word;
+		overflow-wrap: break-word;
+		hyphens: auto;
+	}
+
+	/* 按钮文本换行 */
+	button {
+		word-break: break-word;
+		overflow-wrap: break-word;
+		hyphens: auto;
+	}
+
+	/* 表格单元格文本换行 */
+	td,
+	th {
+		word-break: break-word;
+		overflow-wrap: break-word;
+		hyphens: auto;
+		max-width: 0;
+	}
+
+	/* 代码文本特殊处理 */
+	code {
+		word-break: break-all;
+		overflow-wrap: break-word;
+	}
+
+	/* 预格式化文本 */
+	pre {
+		white-space: pre-wrap;
+		word-break: break-word;
+		overflow-wrap: break-word;
+		overflow-x: auto;
+	}
+
+	/* 输入框文本换行 */
+	input,
+	textarea {
+		word-break: break-word;
+		overflow-wrap: break-word;
+	}
+
+	/* 标签和徽章文本换行 */
+	.badge,
+	.tag {
+		word-break: break-word;
+		overflow-wrap: break-word;
+		hyphens: auto;
+		max-width: 100%;
+	}
+
+	/* 卡片内容文本换行 */
+	.card {
+		min-width: 0;
+		overflow-wrap: break-word;
+	}
+
+	/* 导航链接文本换行 */
+	nav a {
+		word-break: break-word;
+		overflow-wrap: break-word;
+		hyphens: auto;
+	}
+}
+
 /* 自定义 focus 样式 */
 .focus-visible:focus {
 	outline: none;
@@ -220,4 +317,66 @@ body {
 /* 标签hover提示样式 */
 .tag-item:hover .tooltip {
 	opacity: 1;
+}
+
+/* 移动端容器优化 */
+@media (max-width: 768px) {
+	/* 移动端容器和布局优化 */
+	.container {
+		max-width: 100%;
+		padding: 0 1rem;
+		overflow-x: hidden;
+	}
+
+	.grid {
+		grid-template-columns: 1fr !important;
+		gap: 1rem;
+	}
+
+	.flex {
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	/* 媒体元素响应式优化 */
+	img {
+		max-width: 100% !important;
+		height: auto !important;
+		border-radius: 0.5rem;
+		object-fit: contain;
+		loading: lazy;
+		max-height: 60vh;
+		transition: transform 0.2s ease;
+	}
+
+	/* 图片容器优化 */
+	.image-container,
+	.chakra-image {
+		max-width: 100%;
+		overflow: hidden;
+		border-radius: 0.5rem;
+	}
+
+	video,
+	iframe {
+		max-width: 100% !important;
+		height: auto !important;
+		border-radius: 0.5rem;
+		max-height: 60vh;
+	}
+
+	table {
+		width: 100%;
+		overflow-x: auto;
+		display: block;
+		white-space: nowrap;
+	}
+
+	tbody,
+	thead,
+	tr {
+		display: table;
+		width: 100%;
+		table-layout: fixed;
+	}
 }

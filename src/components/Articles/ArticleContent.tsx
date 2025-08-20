@@ -24,19 +24,27 @@ interface ArticleContentProps {
  */
 export function ArticleContent({ article }: ArticleContentProps) {
 	return (
-		<VStack align="stretch" gap={8}>
+		<VStack align="stretch" gap={{ base: 6, md: 8 }}>
 			{/* 文章头部 */}
 			<Box>
 				{/* 特色和置顶标识 */}
 				{(article.isFeatured || article.isTop) && (
-					<HStack gap={2} mb={4}>
+					<HStack gap={2} mb={{ base: 3, md: 4 }} wrap="wrap">
 						{article.isTop && (
-							<Badge colorPalette="red" variant="solid">
+							<Badge
+								colorPalette="red"
+								variant="solid"
+								size={{ base: 'sm', md: 'md' }}
+							>
 								置顶
 							</Badge>
 						)}
 						{article.isFeatured && (
-							<Badge colorPalette="yellow" variant="solid">
+							<Badge
+								colorPalette="yellow"
+								variant="solid"
+								size={{ base: 'sm', md: 'md' }}
+							>
 								精选
 							</Badge>
 						)}
@@ -45,47 +53,58 @@ export function ArticleContent({ article }: ArticleContentProps) {
 
 				{/* 文章标题 */}
 				<Heading
-					size="2xl"
-					mb={4}
-					lineHeight="1.2"
+					size={{ base: 'xl', md: '2xl' }}
+					mb={{ base: 3, md: 4 }}
+					lineHeight={{ base: '1.3', md: '1.2' }}
 					color={{ base: 'gray.900', _dark: 'white' }}
+					wordBreak="break-word"
+					hyphens="auto"
 				>
 					{article.title}
 				</Heading>
 
 				{/* 文章元信息 */}
-				<HStack
-					gap={6}
-					wrap="wrap"
-					fontSize="sm"
+				<VStack
+					align="start"
+					gap={{ base: 2, md: 3 }}
+					fontSize={{ base: 'xs', md: 'sm' }}
 					color="gray.600"
 					_dark={{ color: 'gray.400' }}
-					mb={4}
+					mb={{ base: 3, md: 4 }}
 				>
-					<HStack gap={2}>
-						<Calendar size={16} />
-						<Text>{formatDate(article.publishedAt)}</Text>
-					</HStack>
-					<HStack gap={2}>
-						<Clock size={16} />
-						<Text>{formatReadingTime(article.readingTime)}</Text>
-					</HStack>
-					<HStack gap={2}>
-						<Eye size={16} />
-						<Text>{formatNumber(article.viewCount)} 次浏览</Text>
-					</HStack>
-					{article.commentCount !== undefined && (
-						<HStack gap={2}>
-							<MessageCircle size={16} />
-							<Text>{formatNumber(article.commentCount)} 条评论</Text>
+					{/* 第一行：日期和阅读时间 */}
+					<HStack gap={{ base: 4, md: 6 }} wrap="wrap">
+						<HStack gap={2} minW={0}>
+							<Calendar size={16} />
+							<Text truncate>{formatDate(article.publishedAt)}</Text>
 						</HStack>
-					)}
-				</HStack>
+						<HStack gap={2} minW={0}>
+							<Clock size={16} />
+							<Text truncate>{formatReadingTime(article.readingTime)}</Text>
+						</HStack>
+					</HStack>
+					{/* 第二行：浏览量和评论数 */}
+					<HStack gap={{ base: 4, md: 6 }} wrap="wrap">
+						<HStack gap={2} minW={0}>
+							<Eye size={16} />
+							<Text truncate>{formatNumber(article.viewCount)} 次浏览</Text>
+						</HStack>
+						{article.commentCount !== undefined && (
+							<HStack gap={2} minW={0}>
+								<MessageCircle size={16} />
+								<Text truncate>
+									{formatNumber(article.commentCount)} 条评论
+								</Text>
+							</HStack>
+						)}
+					</HStack>
+				</VStack>
 
 				{/* 分类和标签 */}
-				<HStack gap={4} wrap="wrap" mb={6}>
+				<VStack align="start" gap={{ base: 3, md: 4 }} mb={{ base: 4, md: 6 }}>
+					{/* 分类 */}
 					{article.category && (
-						<HStack gap={2}>
+						<HStack gap={2} wrap="wrap">
 							<Folder size={16} />
 							<Link href={`/categories/${article.category.slug}`}>
 								<Badge
@@ -93,6 +112,7 @@ export function ArticleContent({ article }: ArticleContentProps) {
 									variant="subtle"
 									cursor="pointer"
 									_hover={{ bg: 'blue.100' }}
+									size={{ base: 'sm', md: 'md' }}
 								>
 									{article.category.name}
 								</Badge>
@@ -100,37 +120,57 @@ export function ArticleContent({ article }: ArticleContentProps) {
 						</HStack>
 					)}
 
+					{/* 标签 */}
 					{article.tags && article.tags.length > 0 && (
-						<HStack gap={2} wrap="wrap">
-							<Tag size={16} />
-							{article.tags.map((tag) => (
-								<Link key={tag.id} href={`/tags/${tag.slug}`}>
-									<Badge
-										colorPalette="gray"
-										variant="outline"
-										cursor="pointer"
-										_hover={{ bg: 'gray.100' }}
-										style={{
-											borderColor: tag.color,
-											color: tag.color,
-										}}
-									>
-										{tag.name}
-									</Badge>
-								</Link>
-							))}
-						</HStack>
+						<VStack align="start" gap={2} w="full">
+							<HStack gap={2}>
+								<Tag size={16} />
+								<Text
+									fontSize={{ base: 'xs', md: 'sm' }}
+									color="gray.600"
+									_dark={{ color: 'gray.400' }}
+								>
+									标签
+								</Text>
+							</HStack>
+							<HStack gap={2} wrap="wrap" w="full">
+								{article.tags.map((tag) => (
+									<Link key={tag.id} href={`/tags/${tag.slug}`}>
+										<Badge
+											colorPalette="gray"
+											variant="outline"
+											cursor="pointer"
+											_hover={{ bg: 'gray.100' }}
+											size={{ base: 'sm', md: 'md' }}
+											style={{
+												borderColor: tag.color,
+												color: tag.color,
+											}}
+											maxW={{ base: '120px', md: 'none' }}
+										>
+											{tag.name}
+										</Badge>
+									</Link>
+								))}
+							</HStack>
+						</VStack>
 					)}
-				</HStack>
+				</VStack>
 
 				{/* 文章摘要 */}
-				<Blockquote.Root colorPalette="blue" bg="gray.100" pt={4}>
+				<Blockquote.Root
+					colorPalette="blue"
+					bg={{ base: 'gray.50', _dark: 'gray.800' }}
+					p={{ base: 3, md: 4 }}
+					borderRadius="md"
+				>
 					<Blockquote.Content>
 						<Text
-							fontSize="lg"
+							fontSize={{ base: 'md', md: 'lg' }}
 							color={{ base: 'gray.600', _dark: 'gray.400' }}
-							lineHeight="1.6"
-							mb={6}
+							lineHeight={{ base: '1.5', md: '1.6' }}
+							wordBreak="break-word"
+							hyphens="auto"
 						>
 							{article.summary}
 						</Text>
@@ -139,21 +179,46 @@ export function ArticleContent({ article }: ArticleContentProps) {
 
 				{/* 封面图片 */}
 				{article.coverImage && (
-					<Box mb={8}>
+					<Box
+						mb={{ base: 6, md: 8 }}
+						position="relative"
+						overflow="hidden"
+						borderRadius={{ base: 'md', md: 'lg' }}
+						boxShadow={{ base: 'md', md: 'lg' }}
+						transition="all 0.3s ease"
+						_hover={{
+							boxShadow: { base: 'lg', md: 'xl' },
+							transform: { base: 'none', md: 'scale(1.02)' },
+						}}
+					>
 						<Image
 							src={article.coverImage}
 							alt={article.title}
 							w="full"
-							h="400px"
+							h={{
+								base: '200px',
+								sm: '250px',
+								md: '350px',
+								lg: '400px',
+							}}
+							maxH={{ base: '60vh', md: '70vh' }}
 							objectFit="cover"
-							borderRadius="lg"
+							maxW="100%"
+							loading="lazy"
+							transition="transform 0.3s ease"
 						/>
 					</Box>
 				)}
 			</Box>
 
 			{/* 文章内容 */}
-			<Box>
+			<Box
+				minW={0}
+				w="full"
+				overflowWrap="break-word"
+				wordBreak="break-word"
+				hyphens="auto"
+			>
 				<MarkdownRenderer source={article.content} />
 			</Box>
 		</VStack>

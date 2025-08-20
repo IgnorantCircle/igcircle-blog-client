@@ -212,8 +212,21 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 					),
 					// 表格
 					table: ({ children, ...props }) => (
-						<div className="table-wrapper">
-							<table className="table" {...props}>
+						<div
+							className="table-wrapper"
+							style={{
+								overflowX: 'auto',
+								maxWidth: '100%',
+								WebkitOverflowScrolling: 'touch',
+								border: '1px solid var(--chakra-colors-gray-200)',
+								borderRadius: '8px',
+							}}
+						>
+							<table
+								className="table"
+								style={{ minWidth: 'max-content' }}
+								{...props}
+							>
 								{children}
 							</table>
 						</div>
@@ -243,7 +256,20 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 					),
 					// 图片 - 避免HTML嵌套问题
 					img: ({ src, alt, ...props }) => (
-						<img src={src} alt={alt} className="image" {...props} />
+						<img
+							src={src}
+							alt={alt}
+							className="image"
+							style={{
+								maxWidth: '100%',
+								width: '100%',
+								height: 'auto',
+								objectFit: 'contain',
+								maxHeight: '40vh',
+								display: 'block',
+							}}
+							{...props}
+						/>
 					),
 					// 代码块和内联代码
 					code({
@@ -262,7 +288,11 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 						// 内联代码
 						if (inline) {
 							return (
-								<code className="inline-code" {...props}>
+								<code
+									className="inline-code"
+									style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}
+									{...props}
+								>
 									{children}
 								</code>
 							)
@@ -316,7 +346,14 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 									<CodeCopyButton code={codeContent} />
 								</div>
 								{/* 代码内容 */}
-								<div className="code-content">
+								<div
+									className="code-content"
+									style={{
+										overflowX: 'auto',
+										maxWidth: '100%',
+										WebkitOverflowScrolling: 'touch',
+									}}
+								>
 									<SyntaxHighlighter
 										language={language}
 										style={isDark ? atomOneDark : atomOneLight}
@@ -326,9 +363,15 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 											margin: 0,
 											padding: '1.5rem',
 											background: 'transparent',
-											fontSize: '1rem',
-											lineHeight: '1.5',
+											fontSize: '0.875rem',
+											lineHeight: '1.4',
 											borderRadius: 0,
+											whiteSpace: 'pre-wrap',
+											overflowX: 'auto',
+											overflowY: 'auto',
+											wordBreak: 'normal',
+											overflowWrap: 'normal',
+											maxWidth: '100%',
 										}}
 										lineNumberStyle={{
 											minWidth: '3em',

@@ -38,7 +38,6 @@ function ArticleActions({ article }: { article: PublicArticleDetailType }) {
 	const { error, success } = useToast()
 	const [isLiked, setIsLiked] = useState(false)
 	const [isBookmarked, setIsBookmarked] = useState(false)
-	const [likeCount, setLikeCount] = useState(0)
 	const [isLoading, setIsLoading] = useState(false)
 	const [isInitializing, setIsInitializing] = useState(true)
 
@@ -78,7 +77,6 @@ function ArticleActions({ article }: { article: PublicArticleDetailType }) {
 		try {
 			const result = await userArticlesApi.toggleArticleLike(article.id)
 			setIsLiked(result.isLiked)
-			setLikeCount(result.likeCount)
 		} catch (err) {
 			console.error('Failed to toggle like:', err)
 			error('操作失败，请重试')
@@ -140,13 +138,19 @@ function ArticleActions({ article }: { article: PublicArticleDetailType }) {
 	}
 
 	return (
-		<HStack gap={4} justify="center">
+		<HStack
+			gap={{ base: 2, md: 4 }}
+			justify="center"
+			wrap="wrap"
+			flexDirection={{ base: 'column', sm: 'row' }}
+		>
 			<Button
 				variant={isLiked ? 'solid' : 'outline'}
 				colorPalette="red"
-				size="lg"
+				size={{ base: 'md', md: 'lg' }}
 				onClick={handleLike}
 				disabled={isLoading || !isAuthenticated}
+				w={{ base: 'full', sm: 'auto' }}
 			>
 				{isLoading ? (
 					<Spinner size="sm" />
@@ -156,30 +160,34 @@ function ArticleActions({ article }: { article: PublicArticleDetailType }) {
 				{isLiked ? '取消点赞' : '点赞'}
 			</Button>
 
-			<IconButton
-				variant={isBookmarked ? 'solid' : 'outline'}
-				colorPalette="blue"
-				size="lg"
-				onClick={handleBookmark}
-				disabled={isLoading || !isAuthenticated}
-				aria-label="收藏文章"
-			>
-				{isLoading ? (
-					<Spinner size="sm" />
-				) : (
-					<Bookmark size={20} fill={isBookmarked ? 'currentColor' : 'none'} />
-				)}
-			</IconButton>
+			<HStack gap={2} w={{ base: 'full', sm: 'auto' }} justify="center">
+				<IconButton
+					variant={isBookmarked ? 'solid' : 'outline'}
+					colorPalette="blue"
+					size={{ base: 'md', md: 'lg' }}
+					onClick={handleBookmark}
+					disabled={isLoading || !isAuthenticated}
+					aria-label="收藏文章"
+					flex={1}
+				>
+					{isLoading ? (
+						<Spinner size="sm" />
+					) : (
+						<Bookmark size={20} fill={isBookmarked ? 'currentColor' : 'none'} />
+					)}
+				</IconButton>
 
-			<IconButton
-				variant="outline"
-				colorPalette="green"
-				size="lg"
-				onClick={handleShare}
-				aria-label="分享文章"
-			>
-				<Share2 size={20} />
-			</IconButton>
+				<IconButton
+					variant="outline"
+					colorPalette="green"
+					size={{ base: 'md', md: 'lg' }}
+					onClick={handleShare}
+					aria-label="分享文章"
+					flex={1}
+				>
+					<Share2 size={20} />
+				</IconButton>
+			</HStack>
 		</HStack>
 	)
 }
@@ -191,11 +199,18 @@ function RelatedArticles({ articles }: { articles: PublicArticleType[] }) {
 	}
 
 	return (
-		<Card.Root p={6}>
-			<Text fontSize="xl" fontWeight="semibold" mb={4}>
+		<Card.Root p={{ base: 4, md: 6 }}>
+			<Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="semibold" mb={4}>
 				相关文章
 			</Text>
-			<Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
+			<Grid
+				templateColumns={{
+					base: '1fr',
+					md: 'repeat(2, 1fr)',
+					lg: 'repeat(2, 1fr)',
+				}}
+				gap={{ base: 3, md: 4 }}
+			>
 				{articles.map((article) => (
 					<ArticleCardServer key={article.id} article={article} />
 				))}
@@ -216,13 +231,13 @@ export function ArticleInteractions({
 	return (
 		<ErrorBoundary showErrorDetails={process.env.NODE_ENV === 'development'}>
 			<MainLayout>
-				<Container maxW="7xl" py={8}>
+				<Container maxW="7xl" py={{ base: 4, md: 8 }} px={{ base: 4, md: 8 }}>
 					{/* 返回按钮 */}
 					<Button
 						variant="subtle"
-						size="sm"
+						size={{ base: 'sm', md: 'md' }}
 						onClick={() => router.back()}
-						mb={6}
+						mb={{ base: 4, md: 6 }}
 					>
 						<ArrowLeft size={16} />
 						返回
@@ -230,20 +245,26 @@ export function ArticleInteractions({
 
 					<Grid templateColumns={{ base: '1fr', lg: '1fr 200px' }} gap={8}>
 						{/* 主内容区域 */}
-						<GridItem>
+						<GridItem minW={0}>
 							{/* 文章静态内容 */}
 							<ArticleContent article={article} />
 
 							{/* 文章互动 */}
-							<Card.Root p={6} mt={8}>
+							<Card.Root p={{ base: 4, md: 6 }} mt={{ base: 6, md: 8 }}>
 								<VStack align="stretch" gap={4}>
-									<Text fontWeight="semibold">喜欢这篇文章吗？</Text>
+									<Text
+										fontWeight="semibold"
+										fontSize={{ base: 'md', md: 'lg' }}
+										textAlign="center"
+									>
+										喜欢这篇文章吗？
+									</Text>
 									<ArticleActions article={article} />
 								</VStack>
 							</Card.Root>
 
 							{/* 评论区域 */}
-							<Box mt={8}>
+							<Box mt={{ base: 6, md: 8 }}>
 								<Comments
 									articleId={article.id}
 									commentCount={article.commentCount}
@@ -251,14 +272,18 @@ export function ArticleInteractions({
 							</Box>
 
 							{/* 相关文章 */}
-							<Box mt={8}>
+							<Box mt={{ base: 6, md: 8 }}>
 								<RelatedArticles articles={relatedArticles} />
 							</Box>
 						</GridItem>
 
 						{/* 侧边栏 - 文章目录 */}
 						<GridItem>
-							<Box position="sticky" top="100px">
+							<Box
+								position="sticky"
+								top="100px"
+								display={{ base: 'none', md: 'block' }}
+							>
 								<TableOfContents content={article.content} />
 							</Box>
 						</GridItem>

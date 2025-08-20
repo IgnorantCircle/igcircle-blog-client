@@ -109,7 +109,7 @@ const CodeGroup: React.FC<CodeGroupProps> = ({ title, children }) => {
 					{title}
 				</Box>
 			)}
-			<Tabs.Root defaultValue="0" variant="line" size="sm">
+			<Tabs.Root defaultValue="0" size="sm">
 				<Tabs.List my={3}>
 					{codeBlocks.map((block, index) => (
 						<Tabs.Trigger
@@ -122,11 +122,6 @@ const CodeGroup: React.FC<CodeGroupProps> = ({ title, children }) => {
 							border="none"
 							color="fg.muted"
 							transition="all 0.2s"
-							_selected={{
-								bg: 'transparent',
-								color: 'fg',
-								shadow: 'sm',
-							}}
 							_hover={{
 								bg: 'bg.info',
 								color: 'fg',
