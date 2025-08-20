@@ -12,6 +12,7 @@ import { LuX } from 'react-icons/lu'
 const toaster = createToaster({
 	placement: 'top-end',
 	pauseOnPageIdle: true,
+	overlap: true,
 })
 
 export const Toaster = () => {
@@ -21,7 +22,7 @@ export const Toaster = () => {
 				<HStack
 					bg={
 						toast.type === 'success'
-							? 'green.400'
+							? 'green.500'
 							: toast.type === 'error'
 								? 'red.400'
 								: toast.type === 'warning'

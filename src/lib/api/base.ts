@@ -8,9 +8,14 @@ function getAuthTokenSafe(): string | null {
 		return null
 	}
 
-	// 在客户端，从 localStorage 获取令牌
+	// 优先从 localStorage 获取令牌（记住登录的情况）
+	// 如果没有，再从 sessionStorage 获取令牌（不记住登录的情况）
 	try {
-		return localStorage.getItem('access_token')
+		const localToken = localStorage.getItem('accessToken')
+		if (localToken) return localToken
+
+		// 如果localStorage没有，从sessionStorage获取（不记住登录的情况）
+		return sessionStorage.getItem('accessToken')
 	} catch (error) {
 		console.error('获取认证token失败:', error)
 		return null
@@ -69,6 +74,8 @@ export class BaseApiClient {
 					...options?.headers,
 				},
 				...options,
+				// 每60秒重新验证一次数据
+				next: { revalidate: 60 },
 			})
 
 			context.status = response.status

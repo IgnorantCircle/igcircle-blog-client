@@ -1,6 +1,6 @@
 'use client'
 
-import { toaster } from '@/components/ui/tocbot/toaster'
+import { toaster } from '@/components/ui/toaster'
 
 export const useToast = () => {
 	const toast = (options: {
@@ -14,7 +14,7 @@ export const useToast = () => {
 			title: options.title,
 			description: options.description,
 			type: options.type || 'info',
-			duration: options.duration || 5000,
+			duration: options.duration || 2000,
 			closable: options.closable !== false,
 		})
 	}
