@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Providers } from './providers'
-import { Toaster } from '@/components/ui/tocbot/toaster'
+import { Toaster } from '@/components/ui/toaster'
 
 export const metadata: Metadata = {
 	title: '技术博客 - igCircle Blog',
