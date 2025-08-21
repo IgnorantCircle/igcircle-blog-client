@@ -44,9 +44,14 @@ const validationRules: ValidationRules = {
 		return null
 	},
 
-	password: (value: string | boolean) => {
+	password: (value: string | boolean, formData?: ValidationContext) => {
 		const passwordValue = value as string
 		if (!passwordValue) return '请输入密码'
+
+		// 登录时只校验非空，注册时校验格式
+		if (formData?.type === 'login') {
+			return null
+		}
 
 		if (passwordValue.length < 8) return '密码至少需要8位字符'
 		if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordValue)) {
@@ -55,9 +60,15 @@ const validationRules: ValidationRules = {
 		return null
 	},
 
-	username: (value: string | boolean) => {
+	username: (value: string | boolean, formData?: ValidationContext) => {
 		const usernameValue = value as string
 		if (!usernameValue) return '请输入用户名'
+
+		// 登录时只校验非空，注册时校验格式
+		if (formData?.type === 'login') {
+			return null
+		}
+
 		if (usernameValue.length < 3) return '用户名至少需要3个字符'
 		if (!/^[a-zA-Z0-9_]+$/.test(usernameValue))
 			return '用户名只能包含字母、数字和下划线'
