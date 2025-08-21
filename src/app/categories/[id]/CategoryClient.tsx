@@ -25,11 +25,12 @@ import { useState, useCallback } from 'react'
 function CategoryStats({ category }: { category: PublicCategoryType }) {
 	return (
 		<Card.Root
-			p={6}
+			py={3}
+			px={6}
 			bg={{ base: 'blue.50', _dark: 'blue.900' }}
 			borderColor="blue.200"
 		>
-			<Stack gap={4}>
+			<Stack gap={2}>
 				<Stack direction="row" gap={3} align="center">
 					<Box p={2} bg="blue.500" color="white" borderRadius="md">
 						<Folder size={20} />
@@ -44,7 +45,7 @@ function CategoryStats({ category }: { category: PublicCategoryType }) {
 					</Stack>
 				</Stack>
 				{category.description && (
-					<Text color="blue.700" lineHeight="1.6">
+					<Text color="blue.500" lineHeight="1.6">
 						{category.description}
 					</Text>
 				)}
