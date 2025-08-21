@@ -44,16 +44,13 @@ const validationRules: ValidationRules = {
 		return null
 	},
 
-	password: (value: string | boolean, formData?: ValidationContext) => {
+	password: (value: string | boolean) => {
 		const passwordValue = value as string
 		if (!passwordValue) return '请输入密码'
-		if (formData?.type === 'login') {
-			if (passwordValue.length < 6) return '密码至少需要6位字符'
-		} else {
-			if (passwordValue.length < 8) return '密码至少需要8位字符'
-			if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordValue)) {
-				return '密码必须包含大小写字母和数字'
-			}
+
+		if (passwordValue.length < 8) return '密码至少需要8位字符'
+		if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordValue)) {
+			return '密码必须包含大小写字母和数字'
 		}
 		return null
 	},

@@ -49,8 +49,19 @@ export function AuthModal({
 	// 登录表单
 	const loginForm = useAuthForm({
 		type: 'login',
-		onSuccess: onClose,
+		onSuccess: () => {
+			onClose()
+		},
 	})
+
+	// 自定义onClose处理函数，关闭modal时重置表单
+	const handleClose = () => {
+		// 重置登录表单
+		loginForm.setFormData({ username: '', password: '', rememberMe: false })
+		loginForm.setErrors({})
+		// 调用原始的onClose函数
+		onClose()
+	}
 
 	// 注册表单
 	const registerForm = useAuthForm({
@@ -138,7 +149,7 @@ export function AuthModal({
 			{/* 主认证模态框 */}
 			<Modal
 				isOpen={isOpen}
-				onClose={onClose}
+				onClose={handleClose}
 				title="欢迎来到 igCircle Blog"
 				maxWidth="500px"
 				showCloseButton={true}

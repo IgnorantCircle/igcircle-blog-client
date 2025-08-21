@@ -16,7 +16,7 @@ export interface LoginRequestType {
 export interface LoginResponseType {
 	message: string
 	user: UserType
-	access_token: string
+	accessToken: string
 }
 
 /**
