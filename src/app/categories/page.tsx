@@ -95,11 +95,7 @@ function CategoryStats({
 	)
 
 	return (
-		<Grid
-			templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }}
-			gap={6}
-			mb={8}
-		>
+		<Grid templateColumns={{ base: 'repeat(3, 1fr)' }} gap={6} mb={8}>
 			<Card.Root p={6} textAlign="center">
 				<Stack gap={3} align="center">
 					<Box
@@ -170,7 +166,7 @@ function CategoryStats({
 							{mostPopular.name}
 						</Text>
 						<Text color={{ base: 'gray.600', _dark: 'gray.400' }} fontSize="sm">
-							最热门分类
+							热门分类
 						</Text>
 					</Stack>
 				</Stack>

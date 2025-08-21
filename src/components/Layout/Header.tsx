@@ -28,6 +28,7 @@ import { useState } from 'react'
 import { useSettingsStore, useAuthStore } from '@/lib/store'
 import { useAuthModal } from '@/contexts/AuthModalContext'
 import { LuSearch } from 'react-icons/lu'
+import { Avatar } from '../ui/avatar'
 
 export function Header() {
 	const router = useRouter()
@@ -221,8 +222,18 @@ export function Header() {
 										display={{ base: 'none', md: 'flex' }}
 										gap={2}
 									>
-										<UserCircle size={16} />
-										{user?.username}
+										{user?.avatar ? (
+											<Avatar
+												src={user?.avatar}
+												size="xs"
+												name={user?.nickname || user?.username}
+											/>
+										) : (
+											<>
+												<UserCircle size={16} />
+												{user?.username}
+											</>
+										)}
 									</Button>
 								</Menu.Trigger>
 								<Menu.Positioner>
@@ -302,6 +313,12 @@ export function Header() {
 									</Menu.Item>
 									<Menu.Item value="search" asChild>
 										<Link href="/search">搜索</Link>
+									</Menu.Item>
+									<Menu.Item value="profile" asChild>
+										<Link href="/profile">
+											<UserCircle size={16} />
+											个人资料
+										</Link>
 									</Menu.Item>
 
 									{isAuthenticated ? (
