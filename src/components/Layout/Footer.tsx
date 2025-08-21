@@ -2,6 +2,48 @@ import { Box, Container, Flex, Text, Stack, Separator } from '@chakra-ui/react'
 import Link from 'next/link'
 
 export function Footer() {
+	const categories = [
+		{
+			id: '5d856252-ce85-4181-a5db-3980f17356d3',
+			name: '前端开发',
+		},
+		{
+			id: '0747c5e7-6c58-4816-9898-b42ce4639cf2',
+			name: '后端开发',
+		},
+		{
+			id: '43179624-4a48-48d9-941e-f03023e0957b',
+			name: '面试技巧',
+		},
+		{
+			id: '6d916387-c539-4ecc-b73a-15efe0005aed',
+			name: '算法技巧',
+		},
+	]
+
+	const navLinks = [
+		{
+			link: '/',
+			name: '首页',
+		},
+		{
+			link: '/articles',
+			name: '文章列表',
+		},
+		{
+			link: '/categories',
+			name: '分类目录',
+		},
+		{
+			link: '/tags',
+			name: '标签云',
+		},
+		{
+			link: '/about',
+			name: '关于本站',
+		},
+	]
+
 	return (
 		<Box
 			as="footer"
@@ -39,61 +81,19 @@ export function Footer() {
 								快速导航
 							</Text>
 							<Stack gap={2} align={{ base: 'center', md: 'flex-start' }}>
-								<Box asChild>
-									<Link href="/">
-										<Text
-											color={{ base: 'gray.600', _dark: 'gray.400' }}
-											_hover={{ color: 'blue.500' }}
-											transition="color 0.2s"
-										>
-											首页
-										</Text>
-									</Link>
-								</Box>
-								<Box asChild>
-									<Link href="/articles">
-										<Text
-											color={{ base: 'gray.600', _dark: 'gray.400' }}
-											_hover={{ color: 'blue.500' }}
-											transition="color 0.2s"
-										>
-											文章列表
-										</Text>
-									</Link>
-								</Box>
-								<Box asChild>
-									<Link href="/categories">
-										<Text
-											color={{ base: 'gray.600', _dark: 'gray.400' }}
-											_hover={{ color: 'blue.500' }}
-											transition="color 0.2s"
-										>
-											分类目录
-										</Text>
-									</Link>
-								</Box>
-								<Box asChild>
-									<Link href="/tags">
-										<Text
-											color={{ base: 'gray.600', _dark: 'gray.400' }}
-											_hover={{ color: 'blue.500' }}
-											transition="color 0.2s"
-										>
-											标签云
-										</Text>
-									</Link>
-								</Box>
-								<Box asChild>
-									<Link href="/archive">
-										<Text
-											color={{ base: 'gray.600', _dark: 'gray.400' }}
-											_hover={{ color: 'blue.500' }}
-											transition="color 0.2s"
-										>
-											文章归档
-										</Text>
-									</Link>
-								</Box>
+								{navLinks.map((item, name) => (
+									<Box asChild key={name}>
+										<Link href={item.link}>
+											<Text
+												color={{ base: 'gray.600', _dark: 'gray.400' }}
+												_hover={{ color: 'blue.500' }}
+												transition="color 0.2s"
+											>
+												{item.name}
+											</Text>
+										</Link>
+									</Box>
+								))}
 							</Stack>
 						</Stack>
 
@@ -105,38 +105,19 @@ export function Footer() {
 								热门分类
 							</Text>
 							<Stack gap={2} align={{ base: 'center', md: 'flex-start' }}>
-								<Text
-									color={{ base: 'gray.600', _dark: 'gray.400' }}
-									_hover={{ color: 'blue.500' }}
-									transition="color 0.2s"
-									cursor="pointer"
-								>
-									前端开发
-								</Text>
-								<Text
-									color={{ base: 'gray.600', _dark: 'gray.400' }}
-									_hover={{ color: 'blue.500' }}
-									transition="color 0.2s"
-									cursor="pointer"
-								>
-									后端开发
-								</Text>
-								<Text
-									color={{ base: 'gray.600', _dark: 'gray.400' }}
-									_hover={{ color: 'blue.500' }}
-									transition="color 0.2s"
-									cursor="pointer"
-								>
-									技术分享
-								</Text>
-								<Text
-									color={{ base: 'gray.600', _dark: 'gray.400' }}
-									_hover={{ color: 'blue.500' }}
-									transition="color 0.2s"
-									cursor="pointer"
-								>
-									学习笔记
-								</Text>
+								{categories.map((item, index) => (
+									<Box asChild key={index}>
+										<Link href={`/categories/${item.id}`}>
+											<Text
+												color={{ base: 'gray.600', _dark: 'gray.400' }}
+												_hover={{ color: 'blue.500' }}
+												transition="color 0.2s"
+											>
+												{item.name}
+											</Text>
+										</Link>
+									</Box>
+								))}
 							</Stack>
 						</Stack>
 					</Flex>
@@ -160,7 +141,14 @@ export function Footer() {
 							fontSize="sm"
 							textAlign={{ base: 'center', md: 'right' }}
 						>
-							网站备案号
+							网站备案号：
+							<a
+								href="https://beian.miit.gov.cn/"
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								粤ICP备2025452143号
+							</a>
 						</Text>
 					</Flex>
 				</Stack>

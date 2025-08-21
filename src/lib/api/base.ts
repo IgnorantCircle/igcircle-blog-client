@@ -73,9 +73,9 @@ export class BaseApiClient {
 					...(token && { Authorization: `Bearer ${token}` }),
 					...options?.headers,
 				},
-				...options,
-				// 每60秒重新验证一次数据
+				// 每60秒重新验证一次数据，如果配置了cache，则不需要此选项
 				next: { revalidate: 60 },
+				...options,
 			})
 
 			context.status = response.status
@@ -95,9 +95,8 @@ export class BaseApiClient {
 			// 如果不是标准API响应格式，直接返回数据
 			return responseData as T
 		} catch (error) {
-			// 使用全局错误处理器处理网络错误
-			handleGlobalError(error, `${method} ${endpoint}`)
-			return null
+			// 使用专门的网络错误处理器处理网络错误
+			return this.handleNetworkError(error, context)
 		}
 	}
 
@@ -112,7 +111,6 @@ export class BaseApiClient {
 		context: HttpErrorContext,
 		endpoint: string,
 	): Promise<never> {
-		// 移除try-catch，使用Promise.resolve处理可能的JSON解析错误
 		const responseData = await Promise.resolve(response.json()).catch(() => ({
 			message: response.statusText,
 		}))
@@ -129,8 +127,14 @@ export class BaseApiClient {
 		// 记录HTTP错误
 		this.logHttpError(errorResponse, context)
 
-		// 抛出ApiErrorType，让全局错误处理器处理
-		throw new ApiErrorType(errorResponse)
+		// 创建ApiErrorType实例
+		const apiError = new ApiErrorType(errorResponse)
+
+		// 调用全局错误处理器，特别是处理401错误的自动退出登录
+		handleGlobalError(apiError, `API请求失败: ${context.method} ${endpoint}`)
+
+		// 抛出ApiErrorType，让上层调用者也能捕获
+		throw apiError
 	}
 
 	/**
@@ -143,6 +147,11 @@ export class BaseApiClient {
 		context: HttpErrorContext,
 	): never {
 		if (error instanceof ApiErrorType) {
+			// 如果已经是ApiErrorType，也要调用全局错误处理器
+			handleGlobalError(
+				error,
+				`API网络错误: ${context.method} ${context.endpoint}`,
+			)
 			throw error
 		}
 
@@ -182,8 +191,17 @@ export class BaseApiClient {
 		// 记录网络错误
 		this.logNetworkError(errorResponse, context, error)
 
-		// 抛出ApiErrorType，让全局错误处理器处理
-		throw new ApiErrorType(errorResponse)
+		// 创建ApiErrorType实例
+		const apiError = new ApiErrorType(errorResponse)
+
+		// 调用全局错误处理器
+		handleGlobalError(
+			apiError,
+			`API网络错误: ${context.method} ${context.endpoint}`,
+		)
+
+		// 抛出ApiErrorType，让上层调用者也能捕获
+		throw apiError
 	}
 
 	/**

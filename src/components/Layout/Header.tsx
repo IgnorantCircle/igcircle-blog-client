@@ -174,6 +174,18 @@ export function Header() {
 								</Text>
 							</Link>
 						</Box>
+						<Box asChild>
+							<Link href="/about#projects">
+								<Text
+									color={isActiveRoute('/archive') ? 'blue.500' : 'inherit'}
+									_hover={{ color: 'blue.500' }}
+									transition="color 0.2s"
+									fontWeight={isActiveRoute('/archive') ? 'semibold' : 'medium'}
+								>
+									查看项目
+								</Text>
+							</Link>
+						</Box>
 					</Stack>
 
 					<Stack direction="row" gap={4}>
