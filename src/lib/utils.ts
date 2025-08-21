@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 // 格式化日期
 export function formatDate(
 	date: string | Date | number,
-	options?: Intl.DateTimeFormatOptions
+	options?: Intl.DateTimeFormatOptions,
 ): string {
 	let dateObj: Date
 
@@ -94,7 +94,7 @@ export function formatRelativeTime(date: string | Date | number): string {
 // 格式化阅读时间
 export function formatReadingTime(minutes: number): string {
 	if (minutes < 1) {
-		return '1分钟阅读'
+		return '5分钟阅读'
 	}
 	return `${Math.ceil(minutes)}分钟阅读`
 }
@@ -124,31 +124,10 @@ export function truncateText(text: string, maxLength: number): string {
 	return text.slice(0, maxLength) + '...'
 }
 
-// 生成随机颜色（用于标签等）
-export function generateColor(str: string): string {
-	let hash = 0
-	for (let i = 0; i < str.length; i++) {
-		hash = str.charCodeAt(i) + ((hash << 5) - hash)
-	}
-
-	const colors = [
-		'bg-blue-100 text-blue-800',
-		'bg-green-100 text-green-800',
-		'bg-yellow-100 text-yellow-800',
-		'bg-red-100 text-red-800',
-		'bg-purple-100 text-purple-800',
-		'bg-pink-100 text-pink-800',
-		'bg-indigo-100 text-indigo-800',
-		'bg-gray-100 text-gray-800',
-	]
-
-	return colors[Math.abs(hash) % colors.length]
-}
-
 // 防抖函数
 export function debounce<T extends (...args: unknown[]) => unknown>(
 	func: T,
-	wait: number
+	wait: number,
 ): (...args: Parameters<T>) => void {
 	let timeout: NodeJS.Timeout
 
@@ -161,15 +140,70 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 // 节流函数
 export function throttle<T extends (...args: unknown[]) => unknown>(
 	func: T,
-	limit: number
+	limit: number,
 ): (...args: Parameters<T>) => void {
 	let inThrottle: boolean
-
-	return (...args: Parameters<T>) => {
+	return function (this: unknown, ...args: Parameters<T>) {
 		if (!inThrottle) {
-			func(...args)
+			func.apply(this, args)
 			inThrottle = true
 			setTimeout(() => (inThrottle = false), limit)
 		}
 	}
+}
+
+/**
+ * 查询参数值类型
+ */
+export type QueryParamValue =
+	| string
+	| number
+	| boolean
+	| string[]
+	| undefined
+	| null
+
+/**
+ * 构建查询字符串的工具函数
+ * @param params 查询参数对象
+ * @returns 格式化的查询字符串
+ */
+export function buildQueryString(
+	params: Record<string, QueryParamValue>,
+): string {
+	const searchParams = new URLSearchParams()
+
+	Object.entries(params).forEach(([key, value]) => {
+		if (value === undefined || value === null) return
+
+		if (Array.isArray(value)) {
+			// 处理数组参数
+			value.forEach((item) => {
+				if (item !== undefined && item !== null) {
+					searchParams.append(key, String(item))
+				}
+			})
+		} else {
+			// 处理普通参数
+			searchParams.append(key, String(value))
+		}
+	})
+
+	return searchParams.toString()
+}
+
+/**
+ * 构建带查询参数的端点URL
+ * @param baseEndpoint 基础端点
+ * @param params 查询参数
+ * @returns 完整的端点URL
+ */
+export function buildEndpoint(
+	baseEndpoint: string,
+	params?: Record<string, QueryParamValue>,
+): string {
+	if (!params) return baseEndpoint
+
+	const queryString = buildQueryString(params)
+	return queryString ? `${baseEndpoint}?${queryString}` : baseEndpoint
 }
