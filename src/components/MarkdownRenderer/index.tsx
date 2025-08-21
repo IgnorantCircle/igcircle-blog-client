@@ -119,6 +119,33 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 		}
 	}, [headings])
 
+	const handleImageClick = (src: string, alt: string) => {
+		// 打开一个空白新窗口
+		const newWindow = window.open('', 'ImagePreview', 'width=800,height=600')
+
+		if (newWindow) {
+			// 在新窗口中写入HTML，嵌入图片
+			newWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>图片预览</title>
+            <style>
+              body { margin: 0; padding: 20px; background: #f0f0f0; }
+              .preview-container { display: flex; justify-content: center; align-items: center; height: 90vh; }
+              img { max-width: 100%; max-height: 100%; box-shadow: 0 0 20px rgba(0,0,0,0.2); }
+            </style>
+          </head>
+          <body>
+            <div class="preview-container">
+              <img src="${src}" alt="${alt || '预览图片'}" />
+            </div>
+          </body>
+        </html>
+      `)
+			newWindow.document.close() // 完成文档写入
+		}
+	}
 	return (
 		<Box
 			style={style}
@@ -206,7 +233,13 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 					),
 					// 链接
 					a: ({ children, href, ...props }) => (
-						<a href={href} className="link" {...props}>
+						<a
+							href={href}
+							className="link"
+							{...props}
+							target="_blank"
+							rel="noopener noreferrer"
+						>
 							{children}
 						</a>
 					),
@@ -260,15 +293,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 							src={src}
 							alt={alt}
 							className="image"
-							style={{
-								maxWidth: '100%',
-								width: '100%',
-								height: 'auto',
-								objectFit: 'contain',
-								maxHeight: '40vh',
-								display: 'block',
-							}}
 							{...props}
+							onClick={() => handleImageClick(src as string, alt as string)}
 						/>
 					),
 					// 代码块和内联代码

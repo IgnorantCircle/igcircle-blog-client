@@ -343,9 +343,8 @@ body {
 		max-width: 100% !important;
 		height: auto !important;
 		border-radius: 0.5rem;
-		object-fit: contain;
+		object-fit: fill;
 		loading: lazy;
-		max-height: 60vh;
 		transition: transform 0.2s ease;
 	}
 
@@ -360,7 +359,6 @@ body {
 	video,
 	iframe {
 		max-width: 100% !important;
-		height: auto !important;
 		border-radius: 0.5rem;
 		max-height: 60vh;
 	}

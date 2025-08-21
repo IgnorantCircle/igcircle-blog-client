@@ -173,6 +173,47 @@ export function showError(error: unknown, context?: string): void {
 		console.error(`🚨 错误${contextInfo}:`, error)
 	}
 
+	// 处理401未授权错误 - 自动退出登录
+	if (error instanceof ApiErrorType && error.isUnauthorized()) {
+		// 异步处理退出登录，避免循环依赖
+		setTimeout(async () => {
+			try {
+				// 动态导入避免循环依赖
+				const { useAuthStore } = await import('@/lib/store')
+				const { logout } = useAuthStore.getState()
+
+				// 执行退出登录
+				await logout()
+
+				// 显示退出登录提示
+				if (globalToast) {
+					globalToast.warning('登录已过期，请重新登录')
+				}
+
+				// 跳转到登录页面
+				if (typeof window !== 'undefined') {
+					const { useRouter } = await import('next/navigation')
+					// 延迟跳转，确保toast显示
+					setTimeout(() => {
+						window.location.href = '/login'
+					}, 1000)
+				}
+			} catch (logoutError) {
+				console.error('自动退出登录失败:', logoutError)
+				// 即使退出登录失败，也要清除本地状态
+				if (typeof window !== 'undefined') {
+					localStorage.removeItem('accessToken')
+					localStorage.removeItem('remember_me')
+					sessionStorage.removeItem('accessToken')
+					window.location.href = '/login'
+				}
+			}
+		}, 0)
+
+		// 对于401错误，不显示原始错误消息，而是显示友好提示
+		return
+	}
+
 	// 显示toast提示
 	if (globalToast) {
 		globalToast.error(message)

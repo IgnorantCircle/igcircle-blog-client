@@ -173,7 +173,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 		setGlobalToast(toast)
 		initGlobalErrorHandlers()
 		// 初始化认证状态
-		initializeAuthState()
+		initializeAuthState().catch(console.error)
 	}, [toast])
 
 	// 处理主题切换逻辑
