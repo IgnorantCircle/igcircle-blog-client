@@ -8,7 +8,7 @@ import { handleGlobalError } from '@/lib/error-handler'
 // 认证状态接口
 interface AuthState {
 	user: UserType | null
-	access_token: string | null
+	accessToken: string | null
 	isAuthenticated: boolean
 	rememberMe: boolean
 	login: (response: LoginResponseType, rememberMe?: boolean) => void
@@ -41,14 +41,14 @@ export const useAuthStore = create<AuthState>()(
 	persist(
 		(set, get) => ({
 			user: null,
-			access_token: null,
+			accessToken: null,
 			isAuthenticated: false,
 			rememberMe: false,
 			login: (response: LoginResponseType, rememberMe: boolean = false) => {
-				const { user, access_token } = response
+				const { user, accessToken } = response
 				set({
 					user,
-					access_token,
+					accessToken,
 					isAuthenticated: true,
 					rememberMe,
 				})
@@ -56,12 +56,12 @@ export const useAuthStore = create<AuthState>()(
 				if (typeof window !== 'undefined') {
 					if (rememberMe) {
 						// 记住登录：使用localStorage，持久保存
-						localStorage.setItem('access_token', access_token)
+						localStorage.setItem('accessToken', accessToken)
 						localStorage.setItem('remember_me', 'true')
 					} else {
 						// 不记住登录：使用sessionStorage，关闭浏览器后清除
-						sessionStorage.setItem('access_token', access_token)
-						localStorage.removeItem('access_token')
+						sessionStorage.setItem('accessToken', accessToken)
+						localStorage.removeItem('accessToken')
 						localStorage.removeItem('remember_me')
 					}
 				}
@@ -71,22 +71,37 @@ export const useAuthStore = create<AuthState>()(
 					// 调用API退出登录
 					const { authApi } = await import('@/lib/api')
 					await authApi.logout()
+					// API调用成功后，清除本地状态
+					set({
+						user: null,
+						accessToken: null,
+						isAuthenticated: false,
+						rememberMe: false,
+					})
+
+					// 清除所有存储的token和记住登录状态
+					if (typeof window !== 'undefined') {
+						localStorage.removeItem('accessToken')
+						localStorage.removeItem('remember_me')
+						sessionStorage.removeItem('accessToken')
+					}
 				} catch (error) {
 					handleGlobalError(error, 'logout')
-				}
 
-				// 清除本地状态（无论API调用是否成功）
-				set({
-					user: null,
-					access_token: null,
-					isAuthenticated: false,
-					rememberMe: false,
-				})
-				// 清除所有存储的token和记住登录状态
-				if (typeof window !== 'undefined') {
-					localStorage.removeItem('access_token')
-					localStorage.removeItem('remember_me')
-					sessionStorage.removeItem('access_token')
+					// 即使API调用失败，也清除本地状态
+					set({
+						user: null,
+						accessToken: null,
+						isAuthenticated: false,
+						rememberMe: false,
+					})
+
+					// 清除所有存储的token和记住登录状态
+					if (typeof window !== 'undefined') {
+						localStorage.removeItem('accessToken')
+						localStorage.removeItem('remember_me')
+						sessionStorage.removeItem('accessToken')
+					}
 				}
 			},
 			updateUser: (userData: Partial<UserType>) => {
@@ -105,7 +120,7 @@ export const useAuthStore = create<AuthState>()(
 				if (state.rememberMe) {
 					return {
 						user: state.user,
-						access_token: state.access_token,
+						accessToken: state.accessToken,
 						isAuthenticated: state.isAuthenticated,
 						rememberMe: state.rememberMe,
 					}
@@ -113,7 +128,7 @@ export const useAuthStore = create<AuthState>()(
 				// 不记住登录时，不持久化敏感信息
 				return {
 					user: null,
-					access_token: null,
+					accessToken: null,
 					isAuthenticated: false,
 					rememberMe: false,
 				}
@@ -157,10 +172,10 @@ export const useUIStore = create<UIState>()((set) => ({
 export const getAuthToken = (): string | null => {
 	if (typeof window === 'undefined') return null
 	// 优先从localStorage获取（记住登录的情况）
-	const localToken = localStorage.getItem('access_token')
+	const localToken = localStorage.getItem('accessToken')
 	if (localToken) return localToken
 	// 如果localStorage没有，从sessionStorage获取（不记住登录的情况）
-	return sessionStorage.getItem('access_token')
+	return sessionStorage.getItem('accessToken')
 }
 
 // 检查是否已认证的工具函数
@@ -175,21 +190,45 @@ export const getCurrentUser = (): UserType | null => {
 }
 
 // 初始化认证状态的工具函数
-export const initializeAuthState = () => {
+export const initializeAuthState = async () => {
 	if (typeof window === 'undefined') return
 
 	// 检查是否有记住登录的标记
 	const rememberMe = localStorage.getItem('remember_me') === 'true'
 	const token = getAuthToken()
 
-	// 如果没有记住登录但localStorage中有token，清除它
-	if (!rememberMe && localStorage.getItem('access_token')) {
-		localStorage.removeItem('access_token')
+	if (!rememberMe && localStorage.getItem('accessToken')) {
+		localStorage.removeItem('accessToken')
 	}
 
-	// 如果有token但store中没有认证状态，可能需要重新验证token有效性
+	// 如果有token但store中没有认证状态，恢复登录状态
 	if (token && !useAuthStore.getState().isAuthenticated) {
-		// 这里可以添加token验证逻辑
-		console.log('Found existing token, may need to validate')
+		// 恢复基本的认证状态
+		useAuthStore.setState({
+			accessToken: token,
+			isAuthenticated: true,
+			rememberMe: rememberMe,
+			user: null, // 先设置为null，然后异步获取
+		})
+
+		// 异步获取用户信息
+		try {
+			const { userProfileApi } = await import('@/lib/api')
+			const user = await userProfileApi.getCurrentUser()
+			useAuthStore.setState({ user })
+		} catch (error) {
+			console.error('获取用户信息失败:', error)
+			// 如果获取用户信息失败，清除认证状态
+			useAuthStore.setState({
+				accessToken: null,
+				isAuthenticated: false,
+				rememberMe: false,
+				user: null,
+			})
+			// 清除所有存储的token
+			localStorage.removeItem('accessToken')
+			localStorage.removeItem('remember_me')
+			sessionStorage.removeItem('accessToken')
+		}
 	}
 }

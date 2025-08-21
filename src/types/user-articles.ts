@@ -39,4 +39,5 @@ export interface UserArticleQueryType {
 	limit?: number
 	sortBy?: 'createdAt' | 'likedAt' | 'favoritedAt' | 'viewedAt'
 	sortOrder?: 'ASC' | 'DESC'
+	includeArticleTitle?: boolean
 }
