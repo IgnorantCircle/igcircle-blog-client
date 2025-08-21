@@ -12,6 +12,10 @@ export interface CommentType {
 		nickname: string
 		avatar?: string
 	}
+	article?: {
+		title: string
+		slug: string
+	}
 	articleId: string
 	parentId?: string
 	likeCount: number
