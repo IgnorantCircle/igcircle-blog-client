@@ -249,17 +249,12 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 							className="table-wrapper"
 							style={{
 								overflowX: 'auto',
-								maxWidth: '100%',
 								WebkitOverflowScrolling: 'touch',
 								border: '1px solid var(--chakra-colors-gray-200)',
 								borderRadius: '8px',
 							}}
 						>
-							<table
-								className="table"
-								style={{ minWidth: 'max-content' }}
-								{...props}
-							>
+							<table className="table" style={{ minWidth: '100%' }} {...props}>
 								{children}
 							</table>
 						</div>
@@ -316,7 +311,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 							return (
 								<code
 									className="inline-code"
-									style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}
+									style={{
+										wordBreak: 'break-word',
+										overflowWrap: 'break-word',
+									}}
 									{...props}
 								>
 									{children}

@@ -292,7 +292,6 @@
 	.inline-code {
 		font-size: 0.8em;
 		padding: 2px 4px;
-		white-space: pre;
 		overflow-wrap: break-word;
 	}
 
@@ -317,7 +316,11 @@
 		td {
 			padding: 8px 6px;
 			min-width: 80px;
+			max-width: 200px;
 			word-break: break-word;
+			word-wrap: break-word;
+			white-space: pre-wrap;
+
 			hyphens: auto;
 		}
 
@@ -582,6 +585,7 @@
 .table {
 	width: 100%;
 	border-collapse: collapse;
+	table-layout: auto;
 }
 
 .table-head {
@@ -601,6 +605,10 @@
 	border-bottom: 1px solid var(--chakra-colors-gray-200);
 	padding: 0.75rem 1.5rem;
 	transition: background-color 0.2s ease;
+	word-break: break-word;
+	word-wrap: break-word;
+	white-space: pre-wrap;
+	min-width: 200px;
 
 	&:hover {
 		background: var(--chakra-colors-gray-50);
