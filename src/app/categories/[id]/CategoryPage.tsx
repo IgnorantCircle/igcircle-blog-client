@@ -24,7 +24,7 @@ interface CategoryData {
 	}
 }
 
-async function getCategoryData(
+export async function getCategoryData(
 	categorySlug: string,
 	page: number = 1,
 ): Promise<CategoryData | null> {

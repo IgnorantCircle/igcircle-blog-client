@@ -24,7 +24,7 @@ interface TagData {
 	}
 }
 
-async function getTagData(
+export async function getTagData(
 	tagId: string,
 	page: number = 1,
 ): Promise<TagData | null> {
