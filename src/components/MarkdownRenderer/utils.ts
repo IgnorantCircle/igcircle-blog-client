@@ -4,7 +4,7 @@ export function isValidAndSafeUrl(url: string): boolean {
 		const urlObj = new URL(url)
 
 		// 只允许 http 和 https 协议
-		if (!['http:', 'https:'].includes(urlObj.protocol)) {
+		if (!['https:'].includes(urlObj.protocol)) {
 			return false
 		}
 
@@ -38,6 +38,34 @@ export function escapeHtml(text: string): string {
 		.replace(/>/g, '&gt;')
 		.replace(/"/g, '&quot;')
 		.replace(/'/g, '&#39;')
+}
+
+// 确保内容前后有适当的空行，以便ReactMarkdown正确解析
+function ensureProperSpacing(content: string): string {
+	if (!content) return content
+
+	let result = content.trim()
+
+	// 处理内容中的多个代码块之间的间距
+	result = result.replace(
+		/(```[\s\S]*?```)(\s*)(```)/g,
+		(match, firstBlock, spacing, secondBlockStart) => {
+			// 确保代码块之间至少有一个空行
+			const hasEmptyLine = /\n\s*\n/.test(spacing)
+			return hasEmptyLine ? match : `${firstBlock}\n\n${secondBlockStart}`
+		},
+	)
+
+	// 如果内容只包含代码块（没有其他文本），确保代码块能正确解析
+	const isOnlyCodeBlocks = /^\s*```[\s\S]*```\s*$/.test(result)
+	if (isOnlyCodeBlocks) {
+		// 对于只包含代码块的情况，确保代码块前后有换行
+		result = result.replace(/^(\s*```)/gm, '\n$1')
+		result = result.replace(/(```\s*)$/gm, '$1\n')
+		result = result.trim()
+	}
+
+	return result
 }
 
 // 预处理自定义容器
@@ -80,20 +108,58 @@ export function preprocessCustomContainers(markdown: string): string {
 		} else if (type === 'code-group') {
 			// 处理代码组容器 - 保持代码块语法不变，只添加容器
 			const titleAttr = title ? ` data-title="${escapeHtml(title)}"` : ''
+			// 确保代码块前后有空行，以便正确解析
+			const processedContent = ensureProperSpacing(content.trim())
 			return `<div class="custom-container custom-container-code-group" data-type="code-group"${titleAttr}>
 
-${content}
+${processedContent}
 
 </div>`
 		} else if (type === 'detail') {
 			// 处理详情容器
 			const titleAttr = title ? ` data-title="${escapeHtml(title)}"` : ''
-			return `<div class="custom-container custom-container-detail" data-type="detail"${titleAttr}>${content}</div>`
+			// 确保内容前后有空行，以便正确解析
+			const processedContent = ensureProperSpacing(content.trim())
+			return `<div class="custom-container custom-container-detail" data-type="detail"${titleAttr}>
+
+${processedContent}
+
+</div>`
 		} else {
-			// 处理其他容器
+			// 处理其他容器 - 关键修复：检查内容是否只包含代码块
 			const titleAttr = title ? ` data-title="${escapeHtml(title)}"` : ''
-			const safeContent = content // 内容由ReactMarkdown处理，这里不需要转义
-			return `<div class="custom-container custom-container-${type}" data-type="${type}"${titleAttr}>${safeContent}</div>`
+			const trimmedContent = content.trim()
+
+			// 检查内容是否只包含一个代码块（没有其他文本）
+			const isOnlyCodeBlock = /^\s*```[\w]*\s*\n[\s\S]*?\n\s*```\s*$/.test(
+				trimmedContent,
+			)
+
+			if (isOnlyCodeBlock) {
+				// 如果只包含代码块，将其提取出来单独处理
+				const codeBlockMatch = trimmedContent.match(
+					/^\s*```([\w]*)\s*\n([\s\S]*?)\n\s*```\s*$/,
+				)
+				if (codeBlockMatch) {
+					const [, language, code] = codeBlockMatch
+					// 使用特殊的标记，让ReactMarkdown知道这是一个预处理的代码块
+					return `<div class="custom-container custom-container-${type}" data-type="${type}"${titleAttr}>
+
+\`\`\`${language}
+${code}
+\`\`\`
+
+</div>`
+				}
+			}
+
+			// 对于包含其他内容的情况，正常处理
+			const processedContent = ensureProperSpacing(trimmedContent)
+			return `<div class="custom-container custom-container-${type}" data-type="${type}"${titleAttr}>
+
+${processedContent}
+
+</div>`
 		}
 	})
 
