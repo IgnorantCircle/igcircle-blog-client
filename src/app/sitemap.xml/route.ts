@@ -64,7 +64,7 @@ export async function GET() {
 		try {
 			const articlesResponse = await articlesApi.getArticles({
 				status: 'published',
-				limit: 1000, // 获取所有文章
+				limit: 20, // 获取最新的20篇文章
 				sortBy: 'publishedAt',
 				sortOrder: 'DESC',
 			})
