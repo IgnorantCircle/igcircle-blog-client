@@ -59,12 +59,20 @@ export function TableOfContents({ content }: TableOfContentsProps) {
 	}, [])
 
 	// 折叠功能处理
-	const handleToggleCollapse = useCallback((listItem: HTMLElement) => {
-		const subList = listItem.querySelector('.toc-list')
-		if (!subList || subList.children.length === 0) return
+	const handleToggleCollapse = useCallback(
+		(listItem: HTMLElement, e?: Event) => {
+			if (e) {
+				e.preventDefault()
+				e.stopPropagation()
+			}
 
-		listItem.classList.toggle('is-collapsed')
-	}, [])
+			const subList = listItem.querySelector('.toc-list')
+			if (!subList || subList.children.length === 0) return
+
+			listItem.classList.toggle('is-collapsed')
+		},
+		[],
+	)
 
 	// 初始化桌面端tocbot
 	useEffect(() => {
@@ -108,55 +116,22 @@ export function TableOfContents({ content }: TableOfContentsProps) {
 								listItem.classList.add('is-collapsed')
 							}
 
-							// 为折叠图标添加点击事件
+							// 为链接添加点击事件（点击折叠图标区域）
 							const link = listItem.querySelector('.toc-link') as HTMLElement
 							if (link) {
-								// 创建折叠图标元素
-								let collapseIcon = link.querySelector(
-									'.collapse-icon',
-								) as HTMLElement
-								if (!collapseIcon) {
-									collapseIcon = document.createElement('span')
-									collapseIcon.className = 'collapse-icon'
-									collapseIcon.innerHTML = '▼'
-									collapseIcon.style.cssText = `
-										position: absolute;
-										left: -12px;
-										top: 50%;
-										transform: translateY(-50%);
-										font-size: 10px;
-										color: var(--chakra-colors-gray-400);
-										transition: transform 0.2s ease;
-										cursor: pointer;
-										z-index: 10;
-									`
-									link.style.position = 'relative'
-									link.appendChild(collapseIcon)
-								}
+								link.style.position = 'relative'
 
-								// 设置初始图标状态
-								if (listItem.classList.contains('is-collapsed')) {
-									;(collapseIcon as HTMLElement).style.transform =
-										'translateY(-50%) rotate(-90deg)'
-								} else {
-									;(collapseIcon as HTMLElement).style.transform =
-										'translateY(-50%)'
-								}
+								// 添加点击事件监听器
+								link.addEventListener('click', (e) => {
+									// 检查点击位置是否在折叠图标区域（左侧20px区域）
+									const rect = link.getBoundingClientRect()
+									const clickX = e.clientX - rect.left
 
-								// 为折叠图标添加点击事件
-								collapseIcon.addEventListener('click', (e) => {
-									e.preventDefault()
-									e.stopPropagation()
-									handleToggleCollapse(listItem as HTMLElement)
-
-									// 更新图标状态
-									if (listItem.classList.contains('is-collapsed')) {
-										;(collapseIcon as HTMLElement).style.transform =
-											'translateY(-50%) rotate(-90deg)'
-									} else {
-										;(collapseIcon as HTMLElement).style.transform =
-											'translateY(-50%)'
+									if (clickX <= 20) {
+										// 点击在折叠图标区域，执行折叠操作
+										handleToggleCollapse(listItem as HTMLElement, e)
 									}
+									// 否则执行正常的链接跳转
 								})
 							}
 						}

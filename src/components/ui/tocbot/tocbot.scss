@@ -154,8 +154,6 @@
 
 /* 可折叠状态 */
 .is-collapsed {
-	display: none;
-
 	> .toc-list {
 		display: none !important;
 	}
